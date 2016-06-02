@@ -1,4 +1,4 @@
-# BackupGnuCashWin
+# BackupGnuCashLinux
 Backup GnuCash for GNU/Linux (using openjdk + openjfx)
 
 Please see src/backupgnucash/README.md for instructions
