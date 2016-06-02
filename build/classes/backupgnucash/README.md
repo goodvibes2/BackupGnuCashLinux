@@ -16,6 +16,8 @@ The last known BackupGnuCash stable series is the 1.1x series.
   - Building & Installing
   - Supported Platforms
 
+![Image of BackupGnuCash](https://github.com/goodvibes2/BackupGnuCashWin/blob/master/BackupGnuCash.PNG)
+
 ## Overview
 --------
 
