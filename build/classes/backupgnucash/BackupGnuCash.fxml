@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<GridPane fx:id="grid" alignment="CENTER" hgap="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="800.0" vgap="10.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="backupgnucash.BackupGnuCashController">
+  <columnConstraints>
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="184.0" minWidth="10.0" prefWidth="169.0" />
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="471.0" minWidth="10.0" prefWidth="268.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="471.0" minWidth="10.0" prefWidth="160.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="471.0" minWidth="10.0" prefWidth="268.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="471.0" minWidth="10.0" prefWidth="160.0" />
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+  </rowConstraints>
+   <padding>
+      <Insets bottom="25.0" left="15.0" right="15.0" top="15.0" />
+   </padding>
+   <children>
+      <Text fx:id="sceneTitle" strokeType="OUTSIDE" strokeWidth="0.0" text="Backup GnuCash" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.halignment="CENTER">
+         <font>
+            <Font name="Tahoma" size="24.0" />
+         </font>
+      </Text>
+      <Text fx:id="versionNo" strokeType="OUTSIDE" strokeWidth="0.0" text="V# 1.10 26/05/2016" textAlignment="RIGHT" GridPane.columnIndex="3" GridPane.columnSpan="2147483647" GridPane.halignment="RIGHT">
+         <font>
+            <Font size="12.0" />
+         </font>
+      </Text>
+      <Button fx:id="btnSaveSettings" mnemonicParsing="false" onAction="#handleBtnActionSaveSettings" prefHeight="25.0" prefWidth="200.0" text="Save Settings" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="9" />
+      <Label fx:id="lblGCDatFilStr" text="GnuCash data" GridPane.rowIndex="3">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <TextField fx:id="txtGcDatFilStr" prefWidth="500.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" />
+      <Button fx:id="btnChooseGCDatFil" mnemonicParsing="false" onAction="#handleBtnActionChooseGCDat" prefHeight="28.0" prefWidth="80.0" text="Browse" GridPane.columnIndex="4" GridPane.rowIndex="3">
+         <font>
+            <Font size="14.0" />
+         </font></Button>
+      <Label fx:id="lblGCModDate" styleClass="labelNotBold" text="Modifed" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="4" />
+      <Label fx:id="lblGCVer" alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="110.0" text="Version" GridPane.rowIndex="5">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <TextField fx:id="txtGcVer" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+      <Label fx:id="lblDropBox" text="Dropbox" GridPane.rowIndex="7">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <TextField fx:id="txtDropBox" prefHeight="25.0" prefWidth="535.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="7" />
+      <Button fx:id="btnChooseDropBox" mnemonicParsing="false" onAction="#handleBtnActionChooseDropBox" prefHeight="28.0" prefWidth="80.0" text="Browse" GridPane.columnIndex="4" GridPane.rowIndex="7">
+         <font>
+            <Font size="14.0" />
+         </font></Button>
+      <Label fx:id="lblPswd" text="Password" GridPane.rowIndex="11">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <PasswordField fx:id="txtPswd" prefHeight="25.0" prefWidth="150.0" promptText="Password" GridPane.columnIndex="1" GridPane.rowIndex="11" />
+      <TextField fx:id="txtVisPswd" prefHeight="25.0" prefWidth="150.0" promptText="Password" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="11" />
+      <CheckBox fx:id="chbShowPswd" mnemonicParsing="false" text="Show" GridPane.columnIndex="2" GridPane.rowIndex="11" />
+      <Button fx:id="btnBupGC" mnemonicParsing="false" onAction="#handleBtnActionBupGC" prefHeight="25.0" prefWidth="200.0" text="Backup" GridPane.columnIndex="1" GridPane.rowIndex="13">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Button>
+      <Label fx:id="lblLog" alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="163.0" text="Log" textAlignment="RIGHT" GridPane.rowIndex="14">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <TextArea fx:id="taLog" editable="false" prefHeight="248.0" prefWidth="650.0" wrapText="true" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="14" GridPane.rowSpan="8" />
+      <Separator fx:id="sep1" prefHeight="0.0" prefWidth="110.0" GridPane.columnSpan="5" GridPane.rowIndex="2" />
+      <Separator fx:id="sep2" prefHeight="0.0" prefWidth="110.0" GridPane.columnSpan="5" GridPane.rowIndex="6" />
+      <Separator fx:id="sep3" prefHeight="0.0" prefWidth="110.0" GridPane.columnSpan="5" GridPane.rowIndex="8" />
+      <Separator fx:id="sep4" prefHeight="0.0" prefWidth="110.0" GridPane.columnSpan="5" GridPane.rowIndex="10" />
+   </children>
+</GridPane>
