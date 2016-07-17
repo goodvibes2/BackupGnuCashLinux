@@ -3,29 +3,29 @@
 This README.md is formatted for github markdown and is most easily read using a web browser
 to view https://github.com/goodvibes2/BackupGnuCashWin/blob/master/src/backupgnucash/README.md.
 
-The last known BackupGnuCash stable series is the 1.1x series.
+The last known BackupGnuCash stable series is the 1.2x series.
 
-## Table of Contents:
-------------------
+## Table of Contents ##
 
-  - Overview
-  - Features
-  - Dependencies
-  - Running
-  - Internationalization
-  - Building & Installing
-  - Supported Platforms
+  - [Overview](#Overview)
+  - [Features](#Features)
+  - [Dependencies](#Dependencies)
+  - [Running](#Running)
+  - [Internationalization](#Internationalization)
+  - [Building and Installing](#Building and Installing)
+  - [Supported Platforms](#Supported Platforms)
+  - [Known Issues](#Known Issues)
 
 ![Image of BackupGnuCash](https://github.com/goodvibes2/BackupGnuCashWin/blob/master/BackupGnuCash.PNG)
 
-## Overview
---------
+<a name="Overview"></a>
+## Overview ##
 
 BackupGnuCash is an application for easily creating offsite encrypted backups
 of the data files used by the **GnuCash** personal finance manager.
 See http://www.gnucash.org for more information about GnuCash.
 
-This application is written in Java version 8 using JavaFX (or openjfx) for
+This application is written in Java version 8 using JavaFX (or OpenJFX) for
 the graphical user interface. Java versions before 8 cannot be used with this
 application as they do not support JavaFX.
 
@@ -37,9 +37,10 @@ If you need help, please email chris.good@ozemail.com.au and I will help
 if I can and have time available.
 Please read all of this document before asking for help.
 
-## Features
---------
-Features include:
+<a name="Features"></a>
+## Features ##
+
+Features include
 
 - Available for both GNU/Linux and Microsoft Windows.
 BackupGnuCash has been tested in GNU/Linux Ubuntu 16.04 and Windows 10.
@@ -48,46 +49,90 @@ but this has not (yet) been tested.
 
 - An easy-to-use interface.
 After finishing a GnuCash session, you just start BackupGnuCash,
+select the saved GnuCash book configuration using the Book combobox,
 optionally select different directories, enter the password for encryption
 and click the Backup button. BackupGnuCash then encrypts the GnuCash data,
 saved reports and preferences files to a date/time stampded file name in
 the local 3rd party cloud storage directory.
 
-- All GnuCash data files needed for system recovery are backed up.
-The 3 files backed up into each archive file are:
+- All the usual GnuCash data files needed for system recovery are backed up.
+The 3 files backed up into each archive file are
   1. the **main GnuCash data file** which usually has a .gnucash extension.
-     For example:
+     For example
      ```
-       GNU/Linux:              /home/[USER_NAME]/GnuCash/[BOOK].gnucash
-       Windows:   C:\Users\[USER_NAME]\Documents\GnuCash\[BOOK].gnucash
+       GNU/Linux              /home/[USER_NAME]/GnuCash/[BOOK].gnucash
+       Windows   C:\Users\[USER_NAME]\Documents\GnuCash\[BOOK].gnucash
      ```
   
   2. the **saved reports file**, for example
      ```
-       GNU/Linux:   /home/[USER_NAME]/.gnucash/saved-reports-2.4
-       Windows:  C:\Users\[USER_NAME]\.gnucash\saved-reports-2.4
+       GNU/Linux   /home/[USER_NAME]/.gnucash/saved-reports-2.4
+       Windows  C:\Users\[USER_NAME]\.gnucash\saved-reports-2.4
      ```
-     **Note**: the 2.4 suffix is used for both GnuCash 2.4 and 2.6.
+     **Note** The 2.4 suffix is used for both GnuCash 2.4 and 2.6.
      As of 29th May 2016 current stable version of GnuCash is
      2.6.12.
   
-  3. the **preferences file**, usually
+  3. the **preferences file** (GnuCash metadata), usually
        ```
-        GNU/Linux:   /home/[USER_NAME]/.gnucash/books/XXXX.gnucash.gcm
-        Windows: C:\Users\[USER_NAME]\.gnucash\books\XXXX.gnucash.gcm
+        GNU/Linux   /home/[USER_NAME]/.gnucash/books/[BOOK].gnucash.gcm
+        Windows C:\Users\[USER_NAME]\.gnucash\books\[BOOK].gnucash.gcm
        ```
 
   These 3 files are all that is usually required when restoring or
   moving to a new computer, apart from the GnuCash program itself
   which can be downloaded from https://www.gnucash.org/download.
 
-- One-time setup of:
-  1. **location and name of the GnuCash data file**.
+  If you have customised GnuCash in any way that involves files other than
+  the 3 mentioned above, you also should ensure you either have backups
+  of them or instructions for recreating your customisations.
+  For example, you need to have a secure record of your online banking
+  authorisation information so you can set up online banking again if you
+  need to move GnuCash to another computer. This information is held in
+  the registry on Windows systems.
 
-     Once a GnuCash data file has been selected in the BackupGnuCash
-     window, the file modification date and time is display below it,
-     so the user can check it approximately matches the date and time
-     of their last GnuCash session.
+  Using BackupGnuCash is NOT a substitute for regular full system backups.
+  Most customisations, that are not held in the 3 files saved by this app,
+  do not often change, so using BackupGnuCash say daily, along with say
+  monthly full system backups, may be a reasonable backup strategy.
+
+- One-time setup of
+  1. **Book**.
+     
+     From BackupGnuCash version 1.20 on, the configuration details for
+     up to 100 GnuCash books may defined and saved, and they will be
+     automatically loaded when this app starts.
+
+     For example, you may have separate books for your live and test systems,
+     or for the books of different companies.
+
+     The most often used book can be flagged as the default, and it will be
+     the book showing in the Book combobox each time this app starts.
+     The default book shows in **bold** font in the Book combobox dropdown
+     list.
+
+     To make a new book the default:
+     First select or add the new default book, then check (tick) the Default
+     checkbox. It is not permitted to uncheck the Default checkbox.
+
+     To add a new book:
+     Enter the new book name in the Book combobox, then press ENTER before
+     leaving the combobox, then change the other fields (GnuCash data, Version
+     and Dropbox).
+     It is not necessary to press ENTER if using JavaFX or OpenJFX version 8u92,
+     but it doesn't cause any problems.
+     Use the Save Settings button to save the settings for all books.
+     
+     To delete the book settings for the current book shown in the Book
+     combobox, click the **Delete** button.
+     The settings for the last remaining book and the default book cannot be
+     deleted. To delete the default book, first make another book the default.
+
+  2. **Location and name of the GnuCash data file**.
+
+     Once a GnuCash data file has been selected, the file modification date and
+     time is display below it, so the user can check it approximately matches
+     the date and time of their last GnuCash session.
 
      If you find that the GnuCash data file has a file name like
      ```
@@ -106,7 +151,7 @@ The 3 files backed up into each archive file are:
      file because GnuCash, unless told to open a specific data file,
      will open the last data file it used.
 
-  2. **GnuCash version** may optionally be specified which
+  3. **GnuCash version** may optionally be specified which
      will add a suffix of _[Version] to the archive file name
      (before the .7z extension).
      While GnuCash developers try hard to make most versions of
@@ -114,33 +159,39 @@ The 3 files backed up into each archive file are:
      versions are not totally backwards and forwards compatible,
      so this information may be useful if a restore is needed.
 
-     I suggest for example if you are using GnuCash 2.6.12, enter version
+     For example if you are using GnuCash 2.6.12, enter version
      ```
        2612
      ```
-  3. **location of the base archive directory**, for example:
+  4. **Location of the base archive directory**, for example
      ```
           GNU/Linux: /home/[USER_NAME]/Dropbox
           Windows:   C:\Users\[USER_NAME]\Dropbox
      ```
      The archive is created in a sub-directory of the base archive
-     directory, called "GnuCash". For example:
+     directory, called "GnuCash". For example
      ```
-           GNU/Linux: /home/[USER_NAME]/Dropbox/GnuCash
-           Windows:   C:\Users\[USER_NAME]\Dropbox\GnuCash
+           GNU/Linux /home/[USER_NAME]/Dropbox/GnuCash
+           Windows   C:\Users\[USER_NAME]\Dropbox\GnuCash
      ```
      The GnuCash sub-directory must be manually created. If the GnuCash
      sub-directory of the archive directory does not exist, BackupGnuCash
      will show an error message in the Log area at the bottom of the
      window and the Backup button will be disabled.
 
-  After valid (existing) entry of:
+     As the book file name is part of the archive file name, so long as
+     books have unique file names, archive files for multiple books may
+     be put in the same archive directory.
 
+  After valid entry of
+
+    - the book name
     - the location and name of the main GnuCash data file
     - the location of the base archive directory
 
-  BackupGnuCash enables the **Save Settings** button, which when clicked,
-  will save the 2 above entries, and the Version field (optional), in file:
+  the **Save Settings** button will be enabled, which when clicked,
+  will save the 3 above entries, and the Version field (optional),
+  for all books, in file
   ```
     GNU/Linux: /home/[USER_NAME]/.BupGc/defaultProperties
     Windows: C:\Users\USER_NAME]\.BupGc/defaultProperties
@@ -148,16 +199,8 @@ The 3 files backed up into each archive file are:
   **Note** the password is NOT saved and must be entered each time
   BackupGnuCash is started. The password must be at least 8 characters.
 
-  The next time BackupGnuCash is started, the 3 saved fields will be
+  The next time BackupGnuCash is started, the saved settings will be
   automatically loaded from the defaultProperties file.
-
-  Saving the locations of multiple GnuCash books is currently not
-  supported. In this case, if you wish to backup a book which is
-  not the one for which the settings are saved, use the **Browse** button
-  to select the required book and optionally select a different
-  archive file directory. As the book name is part of the archive
-  file name, so long as books have unique names, archive files
-  for multiple books may be put in the same archive directory.
 
 - The **archive** file is intended to be created in a local directory
   which is replicated in the _cloud_ by a 3rd party cloud storage
@@ -177,12 +220,12 @@ The 3 files backed up into each archive file are:
   service, like Google Drive or Microsoft OneDrive, which operates
   in a similar fashion.
 
-  The archive file name will be created in the following format:
+  The archive file name will be created in the following format
   ```
   GnuCash[BOOK]_yyyyMMddhhmmss[_Version].7z
   ```
   where
-    - [BOOK] is the data file name without the .gnucash externsion
+    - [BOOK] is the data file name without the .gnucash extension
     - yyyyMMddhhmmss is the current date and time 
     - [_Version] is the optional GnuCash version number if entered.
 
@@ -199,7 +242,7 @@ The 3 files backed up into each archive file are:
   from an encrypted archive. 7-Zip must be installed in order for the
   encrypted archives to be created and for the data files to be extracted.
 
-  **Windows**: 7-Zip includes gui tool **7-Zip File Manager** which can be used to
+  **Windows** 7-Zip includes gui tool **7-Zip File Manager** which can be used to
   decrypt the archive files if they need to be restored.
   Alternatively, use the 7-Zip command in a command prompt window, E.g.
   ```
@@ -209,9 +252,9 @@ The 3 files backed up into each archive file are:
   ```
     C:\Program Files\7-Zip\7z.exe e archive.7z -oc:\soft *.gnucash
   ```
-  extracts *.gnucash files from archive archive.7z to c:\soft folder.
+  extracts files ending in **.gnucash** from archive archive.7z to c:\soft folder.
 
-  **GNU/Linux**: **Archive Manager** can be used to manage 7-Zip files if the
+  **GNU/Linux** **Archive Manager** can be used to manage 7-Zip files if the
   **p7zip-full** package is installed.
   Alternatively, use the 7-Zip command in a terminal window, E.g.
   ```
@@ -221,55 +264,55 @@ The 3 files backed up into each archive file are:
   ```
   7z e archive.7z -o/tmp "*.gnucash"
   ```
-  extracts *.gnucash files from archive archive.7z to /tmp directory.
+  extracts files ending in .gnucash from archive archive.7z to /tmp directory.
 
   Of course, the user needs to enter the password carefully, and remember it!
   **If the password is entered incorrectly or forgotten, the encrypted archives
   will be of no use.**
 
-  There is a **Show** checkbox to the right of the password. If this is checked,
-  the password will display. If it is unchecked, the characters of the
+  There is a **Show** checkbox to the right of the password. If this is checked
+  (ticked), the password will display. If it is unchecked, the characters of the
   password will display as asterixes.
   After ensuring no-one is watching, show and carefully check the password
   each time you enter it.
 
-
-### Home Page
+<a name="Home Page"></a>
+### Home Page ###
 None
 
-### Precompiled binaries
+### Precompiled binaries ###
 
 ```
- https:://github.com/goodvibes2/BackupGnuCashWin/blob/master/dist/BackupGnuCash.jar
+ https://github.com/goodvibes2/BackupGnuCashWin/blob/master/dist/BackupGnuCash.jar
  or
- https:://github.com/goodvibes2/BackupGnuCashLinux/blob/master/dist/BackupGnuCash.jar
+ https://github.com/goodvibes2/BackupGnuCashLinux/blob/master/dist/BackupGnuCash.jar
 ```
-Being Java bytecode, either of the above should work in either GNU/Linux or
-Windows, so long as dependencies are installed.
+Being Java bytecode build from the same Java source files, either of the above
+should work in either GNU/Linux or Windows.
 
-To download BackupGnuCash,jar:
+To download BackupGnuCash,jar
 
 Paste either of the above URL's into a web browser,
 **Right** click on the **Raw** button, **Save target as**,
 select the required location.
 
-I suggest:
+I suggest
 ```
-GNU/Linux:              /home/[USER_NAME]/BackupGnuCash/BackupGnuCash.jar
-Windows:   C:\Users\[USER_NAME]\Documents\BackupGnuCash\BackupGnuCash.jar
+GNU/Linux              /home/[USER_NAME]/BackupGnuCash/BackupGnuCash.jar
+Windows   C:\Users\[USER_NAME]\Documents\BackupGnuCash\BackupGnuCash.jar
 ```
 
-## Dependencies
-------------
+<a name="Dependencies"></a>
+## Dependencies ##
 
-There are 2 ways to use this application:
+There are 2 ways to use this application
 
   1. Download the prebuilt BackupGnuCash.jar from this project
 
      This application comes with no warranty and you should think about the security
      implications of using software downloaded from the internet. You are trusting
      my good nature and the codebase from which this is built!
-     I have not security audited this code.
+     This code has not been security audited.
 
   OR
 
@@ -278,7 +321,7 @@ There are 2 ways to use this application:
 
 ### To download the prebuilt BackupGnuCash.jar from github
 
-**Note** There are 2 versions of BackupGnuCash on github:
+**Note** There are 2 versions of BackupGnuCash on github
   ```
     https://github.com/goodvibes2/BackupGnuCashWin
   ```
@@ -300,37 +343,39 @@ This is so as to make it easy to download (or clone) the project, set up the
 dependencies, and then be able to open the project in netbeans IDE, and
 build it without any further setup.
 
-Paste either of the following URL's into a web browser:
+Paste either of the following URL's into a web browser
 ```
-https:://github.com/goodvibes2/BackupGnuCashWin/blob/master/dist/BackupGnuCash.jar
+https://github.com/goodvibes2/BackupGnuCashWin/blob/master/dist/BackupGnuCash.jar
  or
-https:://github.com/goodvibes2/BackupGnuCashLinux/blob/master/dist/BackupGnuCash.jar
+https://github.com/goodvibes2/BackupGnuCashLinux/blob/master/dist/BackupGnuCash.jar
 ```
 **Right** click on the **Raw** button, **Save target as**,
   select the required location.
 
-I suggest:
+I suggest
 ```
-GNU/Linux:   /home/[USER_NAME]/BackupGnuCash/BackupGnuCash.jar
-Windows:     C:\Users\[USER_NAME]\Documents\BackupGnuCash\BackupGnuCash.jar
+GNU/Linux   /home/[USER_NAME]/BackupGnuCash/BackupGnuCash.jar
+Windows     C:\Users\[USER_NAME]\Documents\BackupGnuCash\BackupGnuCash.jar
 ```
 
-### Dependencies for using prebuilt backupGnuCash.jar
+### Dependencies for using prebuilt backupGnuCash.jar ###
 
-(See **Building & Installing** below if you wish to build from source)
+(See [Building and Installing](#Building and Installing) below if you wish to build from source)
 
 If you wish to download and use the prebuilt BackupGnuCash.jar from
-this github project, the following packages are required to be installed:
+this github project, the following packages are required to be installed
 
-#### GNU/Linux
+#### GNU/Linux ####
 These instructions are for Ubuntu 16.04 but should be similar for other
 Gnu/Linux flavours/versions.
 
-##### Java
+##### Java #####
 BackupGnuCash uses Java version 8 (or later) and JavaFX.
 These can be either the open **or** Oracle versions.
 
-###### Open Java
+See also [Known Issues](#Known Issues).
+
+###### Open Java ######
 Openjdk (http://openjdk.java.net)
 Install **openjfx** (which will also install **openjdk-8-jre** if not already
 installed). E.g
@@ -345,13 +390,13 @@ https://wiki.openjdk.java.net/display/OpenJFX/Main
 or
 http://chriswhocodes.com/.
 
-###### Oracle Java
-Note: Oracle Java 8 includes JavaFX.
+###### Oracle Java ######
+**Note** Oracle Java 8 includes JavaFX.
 
 Install Oracle Java SE 8 RunTime Environment (jre) from
 http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html
 
-##### 7-Zip
+##### 7-Zip ######
 ```
     sudo apt-get install p7zip-full
 ```
@@ -360,15 +405,17 @@ http://www.7-zip.org/download.html
 or
 https://sourceforge.net/projects/sevenzip
 
-#### Windows
+#### Windows ####
 All the dependencies are available for Windows XP (I think) 7, 8, and 10.
 
-##### Java
+##### Java #####
 Prebuilt openjfx is not available (as far as I can tell as at 31 May 2016)
 for Windows, so use Oracle Java 8 (which includes JavaFX) from
 http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html.
 
-##### 7-Zip
+See also [Known Issues](#Known Issues).
+
+##### 7-Zip #####
 Install from http://www.7-zip.org/download.html
 or https://sourceforge.net/projects/sevenzip.
 
@@ -386,11 +433,12 @@ but not for
       E:\Program Files (x86)\7-Zip\7z.exe
 ```
 
-## Running
--------
+<a name="Running"></a>
+## Running ##
 
-### GNU/Linux
-  To run the project from the command line, type the following:
+
+### GNU/Linux ###
+  To run the project from the command line, type the following
 ```
     java -jar "[PathTo]/BackupGnuCash.jar" &
 ```
@@ -398,8 +446,8 @@ E.g.
 ```
     java -jar /home/[USER_NAME]/BackupGnuCash/BackupGnuCash.jar &
 ```
-**Ubuntu**: To set up a BackupGnuCash.desktop file so it can be started from the Unity
-Dash:
+**Ubuntu** To set up a BackupGnuCash.desktop file so it can be started from the Unity
+Dash
 
 create either (or both)
 ```
@@ -407,7 +455,7 @@ create either (or both)
 or 
 /home/[USER_NAME]/.local/share/applications/backup-gnucash.desktop
 ```
-containing:
+containing
 ```
 [Desktop Entry]
 Name=BackupGnuCash
@@ -428,28 +476,30 @@ to ~/Desktop. Ensure it has execute permissions or you will get error
   chmod +x ~/Desktop
 ```
 
-### Windows
-Create a shortcut on your desktop:
+### Windows ###
+Create a shortcut on your desktop
 
 Right click on the desktop,
 New, Shortcut,
 Browse to and select your BackupGnuCash.jar file
-or just type in the full filestring E.g:
+or just type in the full filestring E.g
 ```
 C:\Users\[USER_NAME]\Documents\BackupGnuCash\BackupGnuCash.jar
 ```
 Name the shortcut **Backup GnuCash**.
 
-## Internationalization
+<a name="Internationalization"></a>
+## Internationalization ##
 --------------------
 
 BackupGnuCash is currently English only.
 
 
-## Building & Installing
+<a name="Building and Installing"></a>
+## Building and Installing ##
 ---------------------
 
-### Note: This project was developed and tested using:
+### **Note** This project was developed and tested using ###
 
 **GNU/Linux**
 ```
@@ -468,30 +518,30 @@ BackupGnuCash is currently English only.
       netbeans IDE 8.0
       7-Zip 9.20
 ```
-If you wish to build the BackupGnuCash.jar from source, you'll need:
+If you wish to build the BackupGnuCash.jar from source, you'll need
 
-### GNU/Linux:
-**Note**: These instructions are for Ubuntu 16.04 but should be similar for other
+### GNU/Linux ###
+**Note** These instructions are for Ubuntu 16.04 but should be similar for other
 Gnu/Linux flavours/versions.
 
-#### Java:
+#### Java ####
 BackupGnuCash uses Java version 8 and JavaFX (or OpenJFX).
 These can be EITHER the open OR Oracle versions.
 
-##### Openjdk
-You'll need the Java Development Kit (jdk) and openjfx: E.g.
+##### Openjdk #####
+You'll need the Java Development Kit (jdk) and OpenJFX. E.g.
 ```
 sudo apt-get install openjdk-8-jdk openjfx
 ```
 OR
-##### Oracle Java 8 jdk (includes javaFX)
+##### Oracle Java 8 jdk (includes javaFX) #####
 Download and install Oracle Java SE 8 Development Kit from
 http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html.
 
-**Note**: You can download a package which includes both the netbeans IDE and
+**Note** You can download a package which includes both the netbeans IDE and
 the jdk from http://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html.
 
-#### SceneBuilder
+#### SceneBuilder ####
 SceneBuilder is the gui tool for modifying the user interface, details
 of which are held in BackupGnuCash.fxml.
 You only need to install SceneBuilder if you wish to modify the user
@@ -504,17 +554,17 @@ Download the .deb from http://gluonhq.com/open-source/scene-builder
 
 E.g. Linux 64 bit: scenebuilder-8.2.0_x64_64.deb
 
-Install:
+Install
 ```
 sudo dpkg -i scenebuilder-8.2.0_x64_64.deb
 ```
 #### Netbeans IDE
 If you haven't already installed netbeans as part of the Oracle combined
-jdk and netbeans:
+jdk and netbeans
 ```
 sudo apt-get install netbeans
 ```
-#### 7-Zip
+#### 7-Zip ####
 ```
     sudo apt-get install p7zip-full
 ```
@@ -523,20 +573,20 @@ http://www.7-zip.org/download.html
 or
 https://sourceforge.net/projects/sevenzip/.
 
-### Windows
+### Windows ###
 
-#### Java
+#### Java ####
 BackupGnuCash uses Java version 8 and JavaFX.
     Openjdk and OpenJFX are NOT available for Windows, so use Oracle versions.
 
-##### Oracle Java 8 jdk (includes javaFX)
+##### Oracle Java 8 jdk (includes javaFX) #####
 Download and install Oracle Java SE 8 Development Kit from
 http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html.
 
-**Note**: You can download a package which includes both the netbeans IDE and
+**Note** You can download a package which includes both the netbeans IDE and
 the jdk from http://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html.
 
-#### SceneBuilder
+#### SceneBuilder ####
 SceneBuilder is the gui tool for modifying the user interface, details
 of which are held in BackupGnuCash.fxml.
 You only need to install SceneBuilder if you wish to modify the user
@@ -546,33 +596,27 @@ SceneBuilder is no longer available from Oracle.
 
 Download from http://gluonhq.com/open-source/scene-builder.
 
-#### Netbeans IDE
+#### Netbeans IDE ####
 If you haven't already installed netbeans as part of an Oracle combined
-jdk and netbeans:
+jdk and netbeans
 
 Download and install from https://netbeans.org/downloads/.
 
-#### 7-Zip
+#### 7-Zip ####
 Install from http://www.7-zip.org/download.html
 or https://sourceforge.net/projects/sevenzip.
 
-If running a 64-bit version of Windows, download and install the 64-bit
-version of 7-Zip as BackupGnuCash looks for either
+BackupGnuCash looks for
 ```
-C:\Program Files\7-Zip\7z.exe
+\Program Files\7-Zip\7z.exe
 or
-E:\Program Files\7-Zip\7z.exe
+\Program Files (x86)\7-Zip\7z.exe
 ```
-but not
-```
-C:\Program Files (x86)\7-Zip\7z.exe
-or
-E:\Program Files (x86)\7-Zip\7z.exe
-```
+on both the C: and E: drive.
 
-#### To download the source files and netbeans project
+#### To download the source files and netbeans project ####
 
-Note: There are 2 versions of BackupGnuCash on github:
+**Note** There are 2 versions of BackupGnuCash on github
 ```
 https://github.com/goodvibes2/BackupGnuCashWin
 ```
@@ -593,18 +637,18 @@ to download (or clone) the project, set up the dependencies, and then be
 able to open the project in netbeans, and be able to build it without any
 further setup.
 
-There are 2 main ways to download the netbeans project from github:
+There are 2 main ways to download the BackupGnuCash netbeans project from github
 
-1) If you already have a github account and git installed, you can clone:
+1) If you already have a github account and git installed, you can clone
 
-   **GNU/Linux**: At the command line:
+   **GNU/Linux** At the command line
    ```
       cd
       mkdir NetBeansProjects
       cd NetBeansProjects
       git clone https://github.com/goodvibes2/BackupGnuCashLinux BackupGnuCash
    ```
-   **Windows**: In a **git** shell:
+   **Windows** In a **git** shell
    ```
       cd ~/Documents
       mdkir NetBeansProjects
@@ -627,10 +671,10 @@ I suggest after extracting, rename folder
   C:\Users\[USER_NAME]\Documents\NetBeansProjects\BackupGnuCash
 ```
     
-## Supported Platforms
--------------------
+<a name="Supported Platforms"></a>
+## Supported Platforms ##
 
-BackupGnuCash 1.1x is known to work with the following operating systems:
+BackupGnuCash 1.1x is known to work with the following operating systems
 
 - GNU/Linux             -- x86
 - Windows               -- x86
@@ -640,7 +684,32 @@ does, so long as Java 8 (open or Oracle), JavaFX or openJFX, and 7-Zip are
 available.
 
 
-I hope you find BackupGnuCash useful, and it encourages you to make regular backups
-to help protect you from data loss. All hardware fails eventually.
+<a name="Known Issues"></a>
+## Known Issues ##
+
+1) From BackupGnuCash version 1.20 15 Jul 2016, Java 1.8.0_72 (8u72) or later is
+   required due to bug https://bugs.openjdk.java.net/browse/JDK-8136838 as the
+   value of ComboBox.getValue() was not correct in previous versions.
+
+   As of 15 Jul 2016, the current Java version on Windows is 1.8.0_92 and
+   on Ubuntu 16.04 is 1.8.0_91. 
+   Ubuntu 16.04 openjfx is version 8u60-b27-4 which works so long as when 
+   adding a new book, ENTER is pressed after typing a new book name into
+   the Book combobox. I.e. Press ENTER before leaving the combobox.
+
+2) Any new book added to the Book combobox is added to the end of the combobox
+   dropdown list, rather than in it's sorted position. The book settings are
+   sorted before they are saved to the defaultProperties file, so the combobox
+   dropdown list will be sorted next time the program is started.
+   This is because of the following bug in in Java 1.8.0_92
+     https://bugs.openjdk.java.net/browse/JDK-8087838.
+   The use of a SortedList for the combobox can be re-instated after the above
+   bug is fixed. See also
+   http://stackoverflow.com/questions/38342046/how-to-use-a-sortedlist-with-javafx-editable-combobox-strange-onaction-events
+
+
+I hope you find BackupGnuCash useful, and encourages you to make regular backups
+to help protect from data loss. All hardware fails eventually and every-one
+makes mistakes.
 
 Thank you.

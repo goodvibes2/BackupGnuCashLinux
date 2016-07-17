@@ -27,7 +27,9 @@
                    b. If not Windows, use getenv("USER") instead of USERNAME to
                       fix NullPointerException in Ubuntu.
                    c. DropBox -> Dropbox.
-   
+   28/06/2016 1.20 1. Also check for Windows 7-Zip in Program Files (x86).
+                   2. Allow configurations for multiple books.
+                   3. Make ToolTips font bigger (in BackupGnuCash.fxml).
 */
 
 package backupgnucash;
@@ -43,48 +45,56 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-//import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-//import java.nio.file.attribute.FileTime;
+import java.text.Collator;
 import java.text.SimpleDateFormat;
-/* import java.time.LocalDate; */
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
-//import javafx.scene.control.RadioButton;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-//import javafx.scene.control.Toggle;
-//import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import javafx.util.Callback;
 
 /**
  *
  * @author cgood
  */
 public class BackupGnuCashController implements Initializable {
-    
-    /* class variables */
-    
+
+    /* class variables (static) */
+
     @FXML
     private GridPane grid;
     @FXML
@@ -92,7 +102,14 @@ public class BackupGnuCashController implements Initializable {
     @FXML
     private Text versionNo;
     @FXML
-    private Button btnSaveSettings;
+    private Label bookLbl;
+    @FXML
+//  private ComboBox<Book> bookComboBox;
+    private ComboBox bookComboBox;
+    @FXML
+    private Button btnDelete;
+    @FXML
+    private CheckBox defaultBookChb;
     @FXML
     private Label lblGCDatFilStr;
     @FXML
@@ -112,6 +129,8 @@ public class BackupGnuCashController implements Initializable {
     @FXML
     private Button btnChooseDropBox;
     @FXML
+    private Button btnSaveSettings;
+    @FXML
     private Label lblPswd;
     @FXML
     private PasswordField txtPswd;
@@ -120,33 +139,36 @@ public class BackupGnuCashController implements Initializable {
     @FXML
     private CheckBox chbShowPswd;
     @FXML
+    private Button btnBupGC;
+    @FXML
     private Separator sep1;
     @FXML
     private Separator sep2;
-    @FXML
-    private Separator sep3;
     @FXML
     private Separator sep4;
   //@FXML
   //private Label lblShowPswd;
     @FXML
-    private Button btnBupGC;
-    @FXML
     private Label lblLog;
     @FXML
     private TextArea taLog;
-    
+
+    final private static int MAX_BOOKS = 100;
+//  final private ObservableList<Book> bookComboBoxData = FXCollections.observableArrayList();
+    final private ObservableList       bookComboBoxData = FXCollections.observableArrayList();
+    final private Map bookMap = new HashMap(MAX_BOOKS); // key=bookName, value=ref to Book instance
+
     final private static String OS_NAME = System.getProperty("os.name" );
-        
     private static String USER_NAME;
     // character that separates folders from files in paths
     //  i.e. Windows = backslash, Linux/OSX = /
-    private static final char FILE_SEPARATOR = 
+    private static final char FILE_SEPARATOR =
         System.getProperty("file.separator").charAt(0);
+    private static String gcBook = "MyBook";   // current book name
     private static String gcDatFil; // initial default GnuCash data file
     private static String gcVer = ""; // optional version backup filename suffix
     private static String dropBox; // inital default Dropbox dir
-        
+
     private static Path pathGcDatFilStr;
     private static final String HOME_DIR = System.getProperty("user.home");
     private static final String ERR_FILE = HOME_DIR + FILE_SEPARATOR
@@ -159,56 +181,293 @@ public class BackupGnuCashController implements Initializable {
             + ".BupGc" + FILE_SEPARATOR + "defaultProperties";
     //  default properties
     private static final Properties defaultProps = new Properties();
-            
+
     private static boolean firstTime = true;
-    
+    private static String bookSelectionTarget = "";
+
+    private static final Font BOLD_FONT = Font.font("System", FontWeight.BOLD, 14);
+    private static final Font NORMAL_FONT = Font.font("System", FontWeight.NORMAL, 14);
+
+    @FXML
+    public void handleBtnActionDelete(Event e) throws IOException {
+
+        // Note: In Java, there is no way to immediately destroy an instance.
+        //  Instances are automatically cleaned up by garbage collection
+        //   sometime after they are no longer referenced so there is no
+        //   need to dispose of the deleted Book instance here.
+
+        // Note: The deleteBtn is disabled when on the default book as
+        //  this user interface does not permit deleting the default book
+
+        String tmpBook = (String) bookComboBox.getValue();
+        if (((tmpBook != null) &&  (! tmpBook.isEmpty()))) {
+            if (bookMap.size() > 1) {
+                bookMap.remove(tmpBook);
+                bookComboBoxData.remove(tmpBook);
+                bookComboBox.setValue(Book.getDefaultBook());
+//              bookComboBox.getItems().remove(tmpBook); // Always remove from bookComboBoxData instead!
+                bookComboBoxData.remove(tmpBook);
+                enable_or_disable_buttons();
+            }
+        }
+    }
+
     @FXML
     public void handleBtnActionSaveSettings(Event e) throws IOException {
-        defaultProps.setProperty("dropBox",     txtDropBox.getText());
-        defaultProps.setProperty("gcDatFil",    txtGcDatFilStr.getText());
-        //if (! txtGcVer.getText().isEmpty()) {
-            defaultProps.setProperty("gcVer",   txtGcVer.getText());
-        //}
-        
+
+        int i = 0;
+        String suffix;
+        String tmpBook;
+
+        defaultProps.setProperty("defaultBook", Book.getDefaultBook());
+
+        // Until problem in Java 8u92 with adding items to ComboBox which uses SortedList is fixed,
+        //  sort the books before saving
+  
+//      Set bookSet = bookMap.keySet();
+//      Iterator itr = bookSet.iterator();
+
+        SortedList sortedBookList = new SortedList<>(bookComboBoxData, Collator.getInstance());
+        Iterator itr = sortedBookList.iterator();
+
+        while (itr.hasNext()) {
+            tmpBook = (String) itr.next();
+            Book refBook = (Book) bookMap.get(tmpBook);
+            suffix = String.valueOf(i++);
+            defaultProps.setProperty("gcBook." + suffix, refBook.getBookName());
+            defaultProps.setProperty("dropBox." + suffix, refBook.getDropBox());
+            defaultProps.setProperty("gcDatFil." + suffix, refBook.getGcDat());
+            defaultProps.setProperty("gcVer." + suffix, refBook.getGcVer());
+        }
+
         try (FileOutputStream out = new FileOutputStream(DEF_PROP)) {
             defaultProps.store(out, "---Backup GnuCash Settings---");
             taLog.setText("Settings successfully saved to " + DEF_PROP);
         } catch (IOException ex) {
             //System.out.println("My Exception Message " + ex.getMessage());
-            //System.out.println("My Exception Class " + ex.getClass());            
+            //System.out.println("My Exception Class " + ex.getClass());
             Logger.getLogger(BackupGnuCashController.class.getName()).log(Level.SEVERE, null, ex);
             taLog.setText("Error: Cannot Save Settings to : " + DEF_PROP);
         }
     }
-    
-    public static void getUserDefaults() {
-        
+
+
+    // NOTE: There was a bug which was fixed in Java 1.8.0_72 (or maybe 1.8.0_74 ?)
+    //        https://bugs.openjdk.java.net/browse/JDK-8136838
+    //      which meant the value of ComboBox.getValue() was not correct.
+    //   Therefore, For BackupGnuCash V#1.20 or later, which now uses
+    //    an editable combobox for the book settings,
+    //   MUST use Java 1.8.0_72 or later!
+    //
+    //   Ubuntu 16.04 openjfx 8u60-b27-4 seems to work OK except must press
+    //    ENTER after typing new book name into bookComboBox to get OnAction
+    //    to fire. OnAction does not fire if focus changes away.
+
+    // Handle selections in editable bookComboBox
+
+    // This event occurs whenever a new item is selected.
+    // This can be because a new item as clicked in the dropdown list
+    //  or a new item was keyed into the combobox (and action key ENTER typed or focus lost)
+    //  or a new item is automatically selected because the previous
+    //   selected item has been removed from the item list.
+
+    // This event does nothing if:
+    //  bookSelectionTarget is not Empty AND != the new selection (selected).
+    // This is to avoid loops from when a new book becomes selected
+    //  after a book is intentionally removed from the combobox
+    //   (in order to force the dropdown list to be re-rendered),
+    //  then added again.
+    // 14/07/2016: Now that books are not intentionally removed, then added again
+    //   to force re-rendering, bookSelectionTarget may no longer be needed but
+    //   has been left in here just in case...
+
+    @FXML
+    public void handleBookComboBoxOnAction(Event event) {
+        String selected;
+        if (bookComboBox.getValue() == null) {
+            selected = "";
+        } else {
+            selected = bookComboBox.getValue().toString();
+        }
+        //String editted = bookComboBox.getEditor().getText();
+        //System.out.println("handleBookComboBoxOnAction(): selected: " + selected
+        //    + " editted=" + editted);
+
+        if
+        ( ( (selected != null) && (! selected.isEmpty()))
+          &&
+          ((bookSelectionTarget.isEmpty()) || (bookSelectionTarget.equals(selected)))
+        ) {
+            // If new book (selected) already exists
+            //   change to it and show related fields
+            // else
+            //   add the new book instance to Book class, bookMap and
+            //   bookComboBoxData and make it the
+            //   selected combobox item
+            if (bookMap.containsKey(selected)) {
+                // Get ref to book object from bookMap
+                Book book = (Book)bookMap.get(selected);
+                //bookComboBox.setValue(selecteded); // set selected Value - do NOT do here - causes loop
+//                System.out.println("bookComboBox.setOnAction: txtGcDatFilStr.setText to " + book.getGcDat());
+                txtGcDatFilStr.setText(book.getGcDat());
+                txtGcVer.setText(book.getGcVer());
+                txtDropBox.setText(book.getDropBox());
+            } else {
+                Book book = new Book(selected, txtGcDatFilStr.getText(), txtGcVer.getText(), txtDropBox.getText());
+                bookMap.put(selected, book);
+                //bookComboBox.setValue(selected);     // set selected Value - do NOT do here causes loop
+                bookComboBoxData.add(selected);
+            }
+            if (Book.getDefaultBook().equals(selected)) {
+                if (! defaultBookChb.isSelected()) {
+                    defaultBookChb.setSelected(true);
+                }
+            } else {
+                if (defaultBookChb.isSelected()) {
+                    defaultBookChb.setSelected(false);
+                }
+            }
+        }
+    }
+
+    public void getUserDefaults() {
+
+        bookComboBox.setEditable(true);
+        bookComboBox.setVisibleRowCount(20);
+
         try (   // with resources
             FileInputStream in = new FileInputStream(DEF_PROP);
         )
         {
+            int i = 0;
+            String suffix;
+            String tmpStr;
+
             defaultProps.load(in);
-            gcDatFil = defaultProps.getProperty("gcDatFil");
-            gcVer = defaultProps.getProperty("gcVer");
-            dropBox = defaultProps.getProperty("dropBox");
-            
-            //in.close();  // done automatically when 'try with resources' ends            
+
+            // Load old properties from versions of BackupGnuCash before 1.20
+            // which did not have a numeric suffix and only allowed 1 saved
+            // setting i.e. gcDatFil, gcVer and dropBox
+            // Do not delete the old properties, so user can revert back to
+            //  an old verions of BackupGnuCash if needed.
+            // Only load the old format properties if the new properties
+            // are not defined so we only do the conversion once
+
+            // Check for existence of new property gcBook.0
+            tmpStr = defaultProps.getProperty("gcBook.0");
+            if ((tmpStr == null) || (tmpStr.isEmpty())) {
+                // new property does not exist so load old properties
+                tmpStr = defaultProps.getProperty("gcDatFil");
+                if ((tmpStr != null) && (!tmpStr.isEmpty())) {
+                    gcDatFil = tmpStr;
+                }
+                tmpStr = defaultProps.getProperty("gcVer");
+                if ((tmpStr != null) && (!tmpStr.isEmpty())) {
+                    gcVer = tmpStr;
+                }
+                tmpStr = defaultProps.getProperty("dropBox");
+                if ((tmpStr != null) && (!tmpStr.isEmpty())) {
+                    dropBox = tmpStr;
+                }
+
+                // Use gcDatFil filename without .guncash extension
+                //  as book name gcBook
+                FileName fileName = new FileName(gcDatFil, FILE_SEPARATOR, '.');
+                gcBook = fileName.filename();
+            }
+            tmpStr = defaultProps.getProperty("defaultBook");
+            if (tmpStr == null || tmpStr.isEmpty()) {
+                tmpStr = gcBook;
+            }
+            Book.setDefaultBook(tmpStr);
+            // Set the bookComboBox selected item
+            // Note: Java 1.8.0_05 : needed to set selected item BEFORE populating the combobox
+            //          or the selected item is not displayed initially
+            //       Java 1.8.0_92 : NO need to set selected item before populating the combobox
+            //  As need to use Java 1.8.0_72 or later anyway due to
+            //      https://bugs.openjdk.java.net/browse/JDK-8136838,
+            //   don't worry about 1.8.0_05
+            bookComboBox.setValue(tmpStr);
+//            System.out.println("getUserDefault(): Default book=" + tmpStr);
+
+            // load book settings into collection bookComboBoxData, then bookComboBox
+            while (i < MAX_BOOKS) {
+                suffix = String.valueOf(i++);
+                tmpStr = defaultProps.getProperty("gcBook." + suffix);
+                if (tmpStr == null) {
+                    break;
+                }
+                gcBook = tmpStr;
+                gcDatFil = defaultProps.getProperty("gcDatFil." + suffix);
+                gcVer = defaultProps.getProperty("gcVer." + suffix);
+                dropBox = defaultProps.getProperty("dropBox." + suffix);
+
+                Book book = new Book(gcBook, gcDatFil, gcVer, dropBox);
+                bookComboBoxData.add(gcBook);
+                bookMap.put(gcBook, book);  // save ref to book in hashmap
+
+                if (Book.getDefaultBook().equals(gcBook)) {
+                    txtGcDatFilStr.setText(gcDatFil);
+//                    System.out.println("getUserDefaults(): txtGcDatFilStr set to " + gcDatFil);
+                    txtGcVer.setText(gcVer);
+                    txtDropBox.setText(dropBox);
+                    defaultBookChb.setSelected(true);
+                }
+                //i++;
+            }
+            if (bookComboBoxData.isEmpty()) {
+                Book book = new Book(gcBook, gcDatFil, gcVer, dropBox);
+                bookComboBoxData.add(gcBook);
+                bookMap.put(gcBook, book);
+            }
+
+            // load initial values into bookComboBox
+            // bookComboBox.getItems().addAll(bookComboBoxData);
+            // Above line works but it is not clear these are inital values.
+            //  Also, not recommended - see https://docs.oracle.com/javase/8/javafx/api/javafx/scene/control/ListView.html
+            //   Using setItems, changes to the observableList are observed and acted on.
+            bookComboBox.setItems(bookComboBoxData);      // items are not sorted using this
+
+            // Note: Due to bug https://bugs.openjdk.java.net/browse/JDK-8087838 in Java 8u92
+            //  it is not advisable to use SortedList, so until Java 9 is
+            //  generally available (Sep 2016 ?), do not use SortedList, but
+            //  sort books before they are saved.
+            //  See also http://stackoverflow.com/questions/38342046/how-to-use-a-sortedlist-with-javafx-editable-combobox-strange-onaction-events
+
+            //bookComboBox.setItems(new SortedList<>(bookComboBoxData, Collator.getInstance()));
+            // Note: Always add/remove bookComboBox items to/from bookComboBoxData
+            //  E.g. using       bookComboBoxData.add
+            //       instead of  bookComboBox.getItems().add
+
+            //bookComboBox.setEditable(true);
+            //bookComboBox.setVisibleRowCount(20);
+            //bookComboBox.setValue(Book.getDefaultBook());
+
+            //in.close();  // done automatically when 'try with resources' ends
         } catch (IOException ex) {
             //System.out.println("My Exception Message " + ex.getMessage());
             //System.out.println("My Exception Class " + ex.getClass());
-            
+
             if (ex.getClass().toString().equals("class java.io.FileNotFoundException")) {
                 System.out.println("getUserDefaults: " + ex.getMessage());
+                Book.setDefaultBook(gcBook);
+                Book book = new Book(gcBook, gcDatFil, gcVer, dropBox);
+                bookComboBoxData.add(gcBook);
+                bookMap.put(gcBook, book);
+//              bookComboBox.setItems(new SortedList<>(bookComboBoxData, Collator.getInstance()));  // JDK-8087838
+                bookComboBox.setItems(bookComboBoxData);
+                bookComboBox.setValue(gcBook);
+                defaultBookChb.setSelected(true);
             } else {
                 Logger.getLogger(BackupGnuCashController.class.getName()).log(Level.SEVERE, null, ex);
-            }    
+            }
         }
     }
-    
+
     public static String getUser() {
         return USER_NAME;
     }
-        
+
     public static String getGcDatFil() {
         return gcDatFil;
     }
@@ -232,49 +491,67 @@ public class BackupGnuCashController implements Initializable {
     boolean isValidPswd() {
         return txtPswd.getText().length() > 7 ;
     }
-    
+
     private static boolean isFirstTime() {
         return firstTime;
     }
-    
-/*    void logText(String strText) {
-        taLog.appendText(strText);
-    }
-*/    
-    
+
     void setTooltips() {
 
         // Create Tooltips (mouse-over text)
-        btnSaveSettings.setTooltip(new Tooltip(
-            "Save Settings:\nSave current settings in\n" +
-            DEF_PROP + "\n" + "The password is NOT saved."
+
+        bookComboBox.setTooltip(new Tooltip(
+            "Book:\nBook name to be used for this book's backup settings.\n" +
+            "For example: MyBook Live\n" +
+            "To add a new book name:\n" +
+            " Type the new book name in this combobox, then press ENTER,\n"  +
+            " then change the other fields (GnuCash data, Version and Dropbox).\n" +
+            "Use the Save Settings button to save the settings for all books."
+        ));
+
+        defaultBookChb.setTooltip(new Tooltip(
+            "Default:\n" +
+            "If ticked, this book is the default shown when this program starts.\n" +
+            "To make another book the default:\n" +
+            " First select the new default book, then tick this checkbox."
         ));
         
+        btnDelete.setTooltip(new Tooltip(
+            "Delete:\nDelete settings for the current book.\n" +
+            "The settings for the last remaining book and the default book cannot be deleted.\n" +
+            "To delete the default book, first make another book the default."
+        ));
+
+        btnSaveSettings.setTooltip(new Tooltip(
+            "Save Settings:\nSave all book settings in\n" +
+            DEF_PROP + "\n" + "The password is NOT saved."
+        ));
+
         txtGcDatFilStr.setTooltip(new Tooltip(
             "GnuCash data file:\n" +
             "The full directory and file string of the GnuCash data file.\n"
         ));
-        
+
         txtGcVer.setTooltip(new Tooltip(
             "GnuCash Version:\nOptional suffix added to GnuCash backup file name.\n"
         ));
-        
+
         txtDropBox.setTooltip(new Tooltip(
             "Dropbox Base Directory:\n" +
             "The encrypted compressed backup file will be saved in a sub-directory\n" +
             "of this directory.\n" +
             "The GnuCash backup file will be saved in a sub-directory called 'GnuCash'.\n"
         ));
-        
+
         // Tooltips (same) for txtPswd & txtVisPswd
         final String strTooltipPswd =
             "Password:\n" +
             "The archived files will be compressed and encrypted with this password using 7-Zip.\n" +
             "Minimum length is 8 characters.";
         txtPswd.setTooltip(new Tooltip(strTooltipPswd));
-        
+
         txtVisPswd.setTooltip(new Tooltip(strTooltipPswd));
-        
+
         btnBupGC.setTooltip(new Tooltip(
             "Backup GnuCash:\n" +
             "The data file will be archived (compressed and encrypted) to the 'GnuCash' sub-directory\n" +
@@ -283,48 +560,53 @@ public class BackupGnuCashController implements Initializable {
             "1. The saved reports configuration file:\n" +
             " " + HOME_DIR + FILE_SEPARATOR + ".gnucash" + FILE_SEPARATOR +
             "saved-reports-2.4\n" +
-            "2. The preferences file:\n" + 
+            "2. The preferences file:\n" +
             " " + HOME_DIR + FILE_SEPARATOR + ".gnucash" + FILE_SEPARATOR +
             "books" + FILE_SEPARATOR + "[BookName].gnucash.gcm"
         ));
 
     }
-    
+
     void enable_or_disable_buttons() {
-        //System.out.println("enable_or_disable_buttons");
+//        System.out.println("Start enable_or_disable_buttons" +
+//            " bookComboBox.getValue()=" + bookComboBox.getValue() +
+//            " txtGcDatFilStr.getText()=" + txtGcDatFilStr.getText());
         boolean boolUserOk = false;
         boolean boolPswdOk = false;
         boolean boolGcOk = false;
         boolean boolDropBoxOk = false;
-        
+        boolean boolBookOK = false;
+
+//        ObservableList<String> items = bookComboBox.getItems();
+//        items.stream().forEach((item) -> {
+//            System.out.println("bookComboBox " + item);
+//        });
+
+//        for (Iterator it = bookComboBoxData.iterator(); it.hasNext();) {
+//            String item = (String) it.next();
+//            System.out.println("bookComboBoxData " + item);
+//        }
+
         taLog.clear();
-        
+
         // Note:    Disable  property : Defines the individual disabled state of this Node.
         //                              'Disable' may be false and 'Disabled true' if a parent node is Disabled.
         //          Disabled propery  : Indicates whether or not this Node is disabled. Could be 'Disabled' because parent node is disabled.
-        
+
         // Test: isDisabled(), Set: setDisable() NOT setDisabled()
-        
-        // 18/07/2015 Do NOT enable or disable until it is determined this needs 
-        //              happen to see if this is causing unwanted Focus change ???
-        
-/*      btnBupGC.setDisable(true);          //Disable
-        btnSaveSettings.setDisable(true);
-*/
-        //System.out.println("btnSaveSettings Disabled");
-                
-        if ((isValidUser() == true)) {
+
+        if (isValidUser()) {
             boolUserOk = true;
         } else {
             taLog.setText("Error: Invalid user: " + USER_NAME + "\n");
         }
-        
+
         if (isValidPswd()) {
             boolPswdOk = true;
         } else {
             taLog.appendText("Please enter Password - minimum length is 8 characters\n");
         }
-        
+
         pathGcDatFilStr = Paths.get(txtGcDatFilStr.getText());
         if (Files.isReadable(pathGcDatFilStr)) {
             // show the Last Modified date/time
@@ -372,7 +654,7 @@ public class BackupGnuCashController implements Initializable {
                         " is not readable or does not exist");
                 }
             }
-        } else {                
+        } else {
             taLog.appendText("Error: GnuCash data is not readable or does not exist\n");
         }
 
@@ -383,7 +665,7 @@ public class BackupGnuCashController implements Initializable {
                     + "GnuCash"))) {
                 boolDropBoxOk = true;
             } else {
-                taLog.appendText("Error: Dropbox directory " + 
+                taLog.appendText("Error: Dropbox directory " +
                     txtDropBox.getText() + FILE_SEPARATOR +
                     "GnuCash is not writable or does not exist\n");
             }
@@ -392,9 +674,46 @@ public class BackupGnuCashController implements Initializable {
                     + " is not writable or does not exist\n");
         }
 
-        // Note: To Test: use isDisabled(),
-        //      but to actually enable or disable: setDisable()
-        
+        // Validate bookComboBox
+        if ((bookComboBox.getValue() != null)
+        &&  (!bookComboBox.getValue().toString().isEmpty())) {
+            boolBookOK = true;
+        }
+
+        // Note:
+        //   To Test: use isDisabled(),
+        //     as includes a node being disabled due to a parent being disabled
+        //     whereas isDisable() only applies to the current node
+        //   To actually enable or disable: setDisable()
+
+        // enable or disable bookDefaultChb
+        // You can only change a non-default book to be the default,
+        // you cannot make the default book not the default.
+        // This way you have to choose the new default.
+        if ((boolBookOK) && (bookComboBoxData.size() > 1)
+        && (! bookComboBox.getValue().equals(Book.getDefaultBook()))) {
+            if (defaultBookChb.isDisabled()) {
+                defaultBookChb.setDisable(false);       // Enable
+            }
+        } else {
+            if (! defaultBookChb.isDisabled()) {
+                defaultBookChb.setDisable(true);        // Disable
+            }
+        }
+
+        // enable or disable btnDelete
+        // default book cannot be deleted
+        if (((boolBookOK) && (bookComboBoxData.size() > 1)
+        && (! bookComboBox.getValue().equals(Book.getDefaultBook())))) {
+            if (btnDelete.isDisabled()) {
+                btnDelete.setDisable(false);       // Enable
+            }
+        } else {
+            if (! btnDelete.isDisabled()) {
+                btnDelete.setDisable(true);        // Disable
+            }
+        }
+
         // enable or disable btnBupGC
         if (boolUserOk && boolPswdOk & boolGcOk & boolDropBoxOk) {
             if (btnBupGC.isDisabled()) {        // if Disabled
@@ -405,12 +724,34 @@ public class BackupGnuCashController implements Initializable {
                 btnBupGC.setDisable(true);     //      Disable
             }
         }
-                
+
         // enable or disable btnSaveSettings
-        if (boolUserOk && boolGcOk && boolDropBoxOk) {
+        if (boolUserOk && boolBookOK && boolGcOk && boolDropBoxOk) {
             if (btnSaveSettings.isDisabled()) {        // if Disabled
                 btnSaveSettings.setDisable(false);     //     Enable
                 //System.out.println("btnSaveSettings Enabled");
+            }
+            // If Book already exists
+            //   Update Book instance from screen fields
+            // else
+            //   Add current settings to Book, bookMap and bookComboBoxData
+            if (bookMap.containsKey(bookComboBox.getValue())) {
+                Book book = (Book)bookMap.get(bookComboBox.getValue());
+                book.setGcDat(txtGcDatFilStr.getText());
+                book.setGcVer(txtGcVer.getText());
+                book.setDropBox(txtDropBox.getText());
+//                System.out.println("enable_or_disable:"
+//                    + "set book=" + bookComboBox.getValue()
+//                    + " GcDat=" + txtGcDatFilStr.getText()
+//                    + " GcVer=" + txtGcVer.getText()
+//                    + " DropBox=" + txtDropBox.getText());
+            } else {
+                Book book = new Book(bookComboBox.getValue().toString(),
+                                     txtGcDatFilStr.getText(),
+                                     txtGcVer.getText(),
+                                     txtDropBox.getText());
+                bookMap.put(bookComboBox.getValue(), book);
+                bookComboBoxData.add(bookComboBox.getValue().toString());
             }
         } else {
             if (! btnSaveSettings.isDisabled()) {      // if Enabled
@@ -419,8 +760,8 @@ public class BackupGnuCashController implements Initializable {
         }
 
         // Change Focus to password if all except password OK
-        if ((boolUserOk && boolGcOk && boolDropBoxOk) && (! isValidPswd()) ) {
-            //System.out.println("txtPswd.isVisible=" + txtPswd.isVisible() + 
+        if ((boolUserOk && boolBookOK && boolGcOk && boolDropBoxOk) && (! isValidPswd()) ) {
+            //System.out.println("txtPswd.isVisible=" + txtPswd.isVisible() +
             //    " txtVisPswd.isVisible=" + txtVisPswd.isVisible());
             if (txtPswd.isVisible()) {
                 if (! txtPswd.isFocused()) {
@@ -429,11 +770,8 @@ public class BackupGnuCashController implements Initializable {
                         // When run from initialize(), controls are not yet ready to handle focus
                         //  so delay first execution of requestFocus until later
                         //  Refer http://stackoverflow.com/questions/12744542/requestfocus-in-textfield-doesnt-work-javafx-2-1
-                        Platform.runLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                txtPswd.requestFocus();
-                            }
+                        Platform.runLater(() -> {
+                            txtPswd.requestFocus();
                         });
                     } else {
                         txtPswd.requestFocus();
@@ -448,7 +786,7 @@ public class BackupGnuCashController implements Initializable {
             }
         }
     }
-        
+
     /**
      * Backup GnuCash by using commands like
      * Windows:
@@ -471,21 +809,21 @@ public class BackupGnuCashController implements Initializable {
      *   /home/[USER_NAME]/GnuCash/267/XXXX\XXXX.gnucash
      *   /home/[USER_NAME]/.gnucash/saved-reports-2.4
      *   /home/[USER_NAME]/.gnucash/books/XXXX.gnucash.gcm
-     * 
+     *
      * @author cgood
      * @param e
      * @throws java.io.IOException
      */
     @FXML
-    public void handleBtnActionBupGC(Event e) throws IOException 
-    {    
+    public void handleBtnActionBupGC(Event e) throws IOException
+    {
         /* NOTE: it does NOT seem possible to include redirection args like
             > or 2>&1 even if using cmd.exe /c
         */
         final int cmdElements = 7;
-        String strArchive = "";
+        String strArchive;
         int exitVal = 0;
-        
+
         // create archive using 7z.exe
         taLog.clear();
         String str7z;
@@ -496,25 +834,33 @@ public class BackupGnuCashController implements Initializable {
             if (! Files.isExecutable(path7z)) {
                 path7z = Paths.get("E:" + str7z);
                 if (! Files.isExecutable(path7z)) {
-                    taLog.setText("Error: Cannot execute " + str7z 
-                        + " on either C: or E:" );
-                    return;
+                    str7z = "\\Program Files (x86)\\7-Zip\\7z.exe";
+                    path7z = Paths.get("C:" + str7z);
+                    if (! Files.isExecutable(path7z)) {
+                        path7z = Paths.get("E:" + str7z);
+                        if (! Files.isExecutable(path7z)) {
+                            taLog.setText("Error: Cannot find or execute "
+                                + "\\Program Files\\7-Zip\\7z.exe or " + str7z
+                                + " on either C: or E:" );
+                            return;
+                        }
+                    }
                 }
             }
         } else {
             str7z = "/usr/bin/7z";
             path7z = Paths.get(str7z);
             if (! Files.isExecutable(path7z)) {
-                taLog.setText("Error: Cannot execute " + str7z );
+                taLog.setText("Error: Cannot find or execute " + str7z );
                 return;
             }
         }
-        try {            
+        try {
             int i = 0;
             String[] cmd = new String[cmdElements];
-            
+
 /*          As not using internal shell commands, cmd.exe is not neeeded
-            
+
             String osName = System.getProperty("os.name" );
             switch (osName) {
                 case "Windows 95":
@@ -527,7 +873,7 @@ public class BackupGnuCashController implements Initializable {
                     cmd[i++] = "/C" ;
                     break;
                 default:
-                    if (osName.startsWith("Windows") == true) {
+                    if (osName.startsWith("Windows")) {
                         cmd[i++] = "cmd.exe" ;
                         cmd[i++] = "/C" ;
                         break;
@@ -537,14 +883,14 @@ public class BackupGnuCashController implements Initializable {
             // 7-zip executable eg
             // "E:\Program Files\7-Zip\7z.exe"
             // not sure if need to quote, but doesn't hurt
-            
+
             // 26/5/2016 Actually, it is OK to quote args for Windows without
             //      using a shell but for Linux, if not using a shell, nothing
             //      strips the quotes, so do NOT quote args.
-            
+
             // TEST using a path with embedded space ?
             //  Linux OK, Windows OK
-            
+
             if (OS_NAME.startsWith("Windows")) {
                 // quote "Program Files" - maybe not needed
                 cmd[i++] = "\"" + path7z.toString() + "\"";
@@ -552,7 +898,7 @@ public class BackupGnuCashController implements Initializable {
                 cmd[i++] = str7z;
             }
             cmd[i++] = "a";     // add to archive
-            
+
             // archive file string eg
             // Windows:
             // C:\Users\[USER_NAME]\Dropbox\GnuCash\GnuCashXXXX_yyyymmddhhmm_267.7z
@@ -566,8 +912,8 @@ public class BackupGnuCashController implements Initializable {
             String strVerSuffix = "";
             if (! txtGcVer.getText().isEmpty()) {
                 strVerSuffix = "_" + txtGcVer.getText();
-            }            
-            
+            }
+
             strArchive = txtDropBox.getText() + FILE_SEPARATOR + "GnuCash" +
                 FILE_SEPARATOR + "GnuCash" + fileName.filename() + "_" +
              /* today.format(DateTimeFormatter.BASIC_ISO_DATE) + */
@@ -575,31 +921,31 @@ public class BackupGnuCashController implements Initializable {
                 strVerSuffix + ".7z";
 //          cmd[i++] = "\"" + strArchive + "\"";
             cmd[i++] = strArchive;
-         
+
             // password
             cmd[i++] = "-p" + txtPswd.getText();
-            
+
             // GC data file eg E:\Data\GnuCash\267\XXXX\XXXX.gnucash
             cmd[i++] = txtGcDatFilStr.getText();
-            
+
             // saved reports configuration file
             //  eg C:\\users\[Name]\\.gnucash\saved-reports-2.4
             cmd[i++] = HOME_DIR + FILE_SEPARATOR +
                     ".gnucash" + FILE_SEPARATOR + "saved-reports-2.4";
-                
+
             // GC options
             //  eg C:\\users\[Name]\.gnucash\books\XXXX.gnucash.gcm
             cmd[i++] = HOME_DIR + FILE_SEPARATOR + ".gnucash" +
                 FILE_SEPARATOR + "books" + FILE_SEPARATOR +
                 fileName.filename() + "." + fileName.extension()+ ".gcm";
-            
+
             while (i < cmdElements) {
                 // stop rt.exec getting NullPointerException
                 cmd[i++] = "";
             }
-            
+
             Runtime rt = Runtime.getRuntime();
-            
+
             System.out.println("Execing ");
 //            debugging
 //            for (int j = 0; j < i; j++) {
@@ -607,17 +953,17 @@ public class BackupGnuCashController implements Initializable {
 //            }
             taLog.appendText("Backing up GnuCash...\n");
             Process proc = rt.exec(cmd);
-            
+
             // make sure output is consumed so system buffers do not fill up
             // and cause the process to hang
-            
+
             /*  Because any updates to the JavaFX gui must be done from the JavaFX
                 application thread, it is not possible to update taLog from
                 StreamGobbler, so use StreamGobbler to put stdout &
                 stderr to files, and just copy the contents of the files to taLog
                 when the 7zip'ing finishes.
              */
-            
+
             try (   // with resources
                 FileOutputStream fosErr = new FileOutputStream(ERR_FILE);
                 FileOutputStream fosOut = new FileOutputStream(OUT_FILE)
@@ -632,13 +978,13 @@ public class BackupGnuCashController implements Initializable {
                 outputGobbler.start();
                 // any error?
                 exitVal = proc.waitFor();
-                System.out.println("ExitValue: " + exitVal);
+//                System.out.println("ExitValue: " + exitVal);
                 taLog.appendText("7-zip ExitValue: " + exitVal + "\n");
                 fosErr.flush();
                 fosOut.flush();
-            }        
-            //fosErr.close();  // done automatically when try with resources ends      
-            //fosOut.close();  // done automatically when try with resources ends      
+            }
+            //fosErr.close();  // done automatically when try with resources ends
+            //fosOut.close();  // done automatically when try with resources ends
         } catch (Throwable t)
         {
             taLog.appendText("7-Zip FAILED");
@@ -648,7 +994,7 @@ public class BackupGnuCashController implements Initializable {
             }
             t.printStackTrace();
         }
-        
+
         // add stderr of 7-zip process to taLog
         Path pthErrFil = Paths.get(ERR_FILE);
         try (InputStream in = Files.newInputStream(pthErrFil);
@@ -657,8 +1003,8 @@ public class BackupGnuCashController implements Initializable {
         ) {
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-                if (!line.equals("")) {
+//                System.out.println(line);
+                if (! line.equals("")) {
                     taLog.appendText(line + "\n");
                 }
             }
@@ -675,7 +1021,7 @@ public class BackupGnuCashController implements Initializable {
             //String line = null;
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+//                System.out.println(line);
                 if (! line.equals("")) {
                     taLog.appendText(line + "\n");
                 }
@@ -684,7 +1030,7 @@ public class BackupGnuCashController implements Initializable {
             System.err.println(x);
             taLog.appendText("IOException reading " + pthOutFil);
         }
-        
+
         if (exitVal != 0) {
             taLog.appendText("Error creating archive");
         }
@@ -692,9 +1038,16 @@ public class BackupGnuCashController implements Initializable {
 
     @FXML
     public void handleBtnActionChooseGCDat(Event e) throws IOException {
-              
-        final FileChooser fileChooser = new FileChooser();         
-        fileChooser.setTitle("Choose GnuCash Data file");   
+
+        final FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Choose GnuCash Data file");
+
+        if ((txtGcDatFilStr.getText() == null)
+        ||  (txtGcDatFilStr.getText().isEmpty())) {
+            txtGcDatFilStr.setText(gcDatFil);
+            enable_or_disable_buttons();
+        }
+
         final File file = new File(txtGcDatFilStr.getText());
         final String strDir = file.getParent();
         final Path pathGcDatDir = Paths.get(strDir);
@@ -704,13 +1057,13 @@ public class BackupGnuCashController implements Initializable {
             fileChooser.setInitialDirectory(new File(HOME_DIR));
         }
         fileChooser.setInitialFileName(file.getName());
-        FileChooser.ExtensionFilter extFilter = 
+        FileChooser.ExtensionFilter extFilter =
                 new FileChooser.ExtensionFilter("GnuCash files (*.gnucash)", "*.gnucash");
         fileChooser.getExtensionFilters().add(extFilter);
-        
+
         // get a reference to the current stage for use with showOpenDialog
         //  so it is modal
-                
+
         Scene scene = btnChooseGCDatFil.getScene(); // any control would do
         if (scene != null) {
             //System.out.println("scene!=null");
@@ -728,15 +1081,21 @@ public class BackupGnuCashController implements Initializable {
             //System.out.println("scene=null");
             taLog.appendText("Error: Cannot open modal fileChooser - scene is null\n");
         }
-    } 
+    }
 
     @FXML
     public void handleBtnActionChooseDropBox() {
 
         // Chose the Dropbox base directory
-        
+
         final DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Choose Dropbox Base Directory");
+
+        if ((txtDropBox.getText() == null)
+        ||  (txtDropBox.getText().isEmpty())) {
+            txtDropBox.setText(dropBox);
+            enable_or_disable_buttons();
+        }
         final File file = new File(txtDropBox.getText());
         final String strDir = file.getPath();
         final Path pathDropDir = Paths.get(strDir);
@@ -745,7 +1104,7 @@ public class BackupGnuCashController implements Initializable {
         } else {
             directoryChooser.setInitialDirectory(new File(HOME_DIR));
         }
-        
+
         Scene scene = btnChooseGCDatFil.getScene(); // any control would do
         if (scene != null) {
             //System.out.println("scene!=null");
@@ -764,11 +1123,11 @@ public class BackupGnuCashController implements Initializable {
             //System.out.println("scene=null");
             taLog.appendText("Error: Cannot open modal directoryChooser - scene is null\n");
         }
-    }    
-   
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-//        throw new UnsupportedOperationException("Not supported yet."); 
+//        throw new UnsupportedOperationException("Not supported yet.");
 //        To change body of generated methods, choose Tools | Templates.
 
         setTooltips();
@@ -777,17 +1136,16 @@ public class BackupGnuCashController implements Initializable {
             USER_NAME = System.getenv("USERNAME").toLowerCase();
             gcDatFil = HOME_DIR + "\\Documents\\GnuCash\\MyFileName.gnucash";
             dropBox = HOME_DIR + "\\Dropbox";
-    
+
         } else {
             USER_NAME = System.getenv("USER").toLowerCase();
             gcDatFil = HOME_DIR + "/GnuCash/MyFileName.gnucash";
             dropBox = HOME_DIR + "/Dropbox";
         }
 
-
-        if (isValidUser() == false) {
+        if (! isValidUser()) {
             //System.out.println("Unknown user: " + BackupGnuCashMigor.USER_NAME);
-                   
+
           //taLog.setText("Error: Unknown user: " + BackupGnuCashController.getWinUserName());
             taLog.setText("Error: Unknown user: " + USER_NAME);
             //taLog.setFill(Color.FIREBRICK);
@@ -806,81 +1164,155 @@ public class BackupGnuCashController implements Initializable {
                     taLog.setText("Error: Cannot create folder: " + pthBupGc.toString());
                 }
             }
-            
-            if (boolDirOK == true) {
-                txtGcDatFilStr.setText(getGcDatFil());
-                txtGcVer.setText(getGcVer());
-                txtDropBox.setText(getDropBoxDir());
+
+            // bookComboBox CellFactory : Make default book bold
+
+            bookComboBox.setCellFactory(
+            new Callback<ListView<String>, ListCell<String>>() {
+                @Override public ListCell<String> call(ListView<String> param) {
+                    final ListCell<String> cell = new ListCell<String>() {
+                        {   // instance initializer
+                            super.setPrefWidth(100);
+                            fontProperty().bind(Bindings.when(itemProperty().isEqualTo(Book.defaultProp))
+                            .then(BOLD_FONT)
+                            .otherwise(NORMAL_FONT));
+                        }
+                        @Override public void updateItem(String item,
+                            boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null) {
+                                    setText(item);
+//                                  if (item.equals(Book.getDefaultBook())) {
+//                                      setFont(Font.font("System", FontWeight.BOLD, 14));
+//                                      System.out.println("bookComboBox.setCellFactory: set BOLD item=" + item);
+//                                  }
+//                                  else {
+//                                      setFont(Font.font("System", FontWeight.NORMAL, 14));
+//                                      System.out.println("bookComboBox.setCellFactory: set NORMAL item=" + item);
+//                                  }
+                                }
+                                else {
+                                    setText(null);
+                                }
+                            }
+                        };
+                        return cell;
+                    }
+                });
+
+//            //handle changes to checkbox defaultBookChb
+//            defaultBookChb.focusedProperty().addListener((ObservableValue<? extends Boolean> o, Boolean wasFocused, Boolean isNowFocused) -> {
+//                if (wasFocused) {
+//                    // has just lost focus
+//                    enable_or_disable_buttons();
+//                }
+//            });
+
+            // handle changes to checkbox defaultBookChb
+            defaultBookChb.selectedProperty().addListener((ObservableValue<? extends Boolean> o, Boolean wasSelected, Boolean isNowSelected) -> {
+//                System.out.println("defaultBookChb.selectedProperty has changed" +
+//                    " oldVal=" + wasSelected + " newVal=" + isNowSelected + " o=" + o);
+
+                final String oldDefault = (String) Book.getDefaultBook();
+                String newDefault;
+                bookSelectionTarget = (String) bookComboBox.getValue();
+
+                if (isNowSelected) {
+                    // IS ticked so this book will become the new default
+                    newDefault = bookSelectionTarget;
+                    Book.setDefaultBook((String) newDefault);
+//                    System.out.println("defaultBookChb.selectedProperty: IsTicked: new defaultBook=" + Book.getDefaultBook());
+                } else {
+                    // Current book is now NOT to be the default.
+                    // Current book is either the default book
+                    //   or a new book if default book name was changeed to a new book name
+                    //
+                    // If current book is not the default
+                    //   do nothing - default stays the same
+                    // else
+                    //   If 1st Book is the default
+                    //     set default to 2nd book
+                    //   else
+                    //     set default to 1st book
+
+                    // Following is not needed anymore now bookComboBox dropdown listView font
+                    //  is bound to defaultProp and cannot untick the default book
+                    //  as defaultChb is disabled when default book is currently selected.
+//                    if (bookSelectionTarget.equals(Book.getDefaultBook())) {
+//                        if (bookComboBoxData.get(0).equals(Book.getDefaultBook())) {
+//                            Book.setDefaultBook((String) bookComboBoxData.get(1));
+//                        } else {
+//                            Book.setDefaultBook((String) bookComboBoxData.get(0));
+//                        }
+//                    }
+                    newDefault = (String) Book.getDefaultBook();
+//                    System.out.println("defaultBookChb.selectedProperty: IsNotTicked: new defaultBook=" + Book.getDefaultBook());
+                }
+
+                bookSelectionTarget = "";
+                enable_or_disable_buttons();
+            });
+
+            // handle changes to txtGcVer so that a new value
+            //  is updated into Book.gcVer
+            txtGcVer.focusedProperty().addListener((ObservableValue<? extends Boolean> o, Boolean wasFocused, Boolean isNowFocused) -> {
+//                System.out.println("txtGcVer.focusedProperty has changed" +
+//                    " oldVal=" + wasFocused + " newVal=" + isNowFocused + " o=" + o);
+                if (wasFocused) {
+                    // has just lost focus
+                    enable_or_disable_buttons();
+                }
+            });
+
+            if (boolDirOK) {           
+                if ((txtGcDatFilStr.getText() == null) || (txtGcDatFilStr.getText().isEmpty())) {
+//                    System.out.println("initialize(): txtGcDatFilStr.setText to " + getGcDatFil());
+                    txtGcDatFilStr.setText(getGcDatFil());
+                }
+                if ((txtGcVer.getText() == null) || (txtGcVer.getText().isEmpty())) {
+                    txtGcVer.setText(getGcVer());
+                }
+                if ((txtDropBox.getText() == null) || (txtDropBox.getText().isEmpty())) {
+                    txtDropBox.setText(getDropBoxDir());
+                }
 
                 pathGcDatFilStr = Paths.get(txtGcDatFilStr.getText());
 
                 // handle changes to txtGcDatFilStr
-                txtGcDatFilStr.focusedProperty().addListener(new ChangeListener<Boolean>(){
-                    @Override
-                    public void changed(ObservableValue<? extends Boolean> o, Boolean oldVal, Boolean newVal){
-                        if (oldVal == true) {
-                            // has just lost focus
-                            enable_or_disable_buttons();
-                        }
+                txtGcDatFilStr.focusedProperty().addListener((ObservableValue<? extends Boolean> o, Boolean oldVal, Boolean newVal) -> {
+                    if (oldVal == true) {
+                        // has just lost focus
+                        enable_or_disable_buttons();
                     }
                 });
 
                 // handle changes to txtDropBox
-                txtDropBox.focusedProperty().addListener(new ChangeListener<Boolean>(){
-                    @Override
-                    public void changed(ObservableValue<? extends Boolean> o, Boolean oldVal, Boolean newVal){
-                        if (oldVal == true) {
-                            // has just lost focus
-                            enable_or_disable_buttons();
-                        }
-                    }
-                });
-                                
-                // handle changes to txtPswd
-                txtPswd.textProperty().addListener(new ChangeListener<String>(){
-                    @Override
-                    public void changed(ObservableValue<? extends String> o, String oldVal, String newVal){
-                        //System.out.println("txtPswd.textProperty has changed" + 
-                        //    " oldVal=" + oldVal + " newVal=" + newVal + " o=" + o);
-                        
-                            enable_or_disable_buttons();
+                txtDropBox.focusedProperty().addListener((ObservableValue<? extends Boolean> o, Boolean oldVal, Boolean newVal) -> {
+                    if (oldVal == true) {
+                        // has just lost focus
+                        enable_or_disable_buttons();
                     }
                 });
 
-                // handle changes to txtVisPswd
-                
-                //  don't need following listener 
-                //  as txtPswd.textProperty and txtVisPswd.textProperty are 
-                //  bound bidirectionally
-                
-/*              txtVisPswd.focusedProperty().addListener(new ChangeListener<Boolean>(){
-                    @Override
-                    public void changed(ObservableValue<? extends Boolean> o, Boolean oldVal, Boolean newVal){
-                        //System.out.println("txtVisPswd.focusedProperty has changed!" + 
-                        //    " oldVal=" + oldVal + " newVal=" + newVal + " o=" + o);
-                        if (oldVal == true) {
-                            // txtVisPswd has just lost focus
-                            enable_or_disable_buttons();
-                            if ((! btnBupGC.isDisabled()) && isValidPswd()) {
-                                btnBupGC.requestFocus();
-                            }
-                        }
-                    }
+                // handle changes to txtPswd
+                txtPswd.textProperty().addListener((ObservableValue<? extends String> o, String oldVal, String newVal) -> {
+                    //System.out.println("txtPswd.textProperty has changed" +
+                    //    " oldVal=" + oldVal + " newVal=" + newVal + " o=" + o);
+
+                    enable_or_disable_buttons();
                 });
-*/
+
                 // handle changes to chbShowPswd
                 chbShowPswd.selectedProperty().addListener(
                     (ObservableValue<? extends Boolean> ov,
                         Boolean old_val, Boolean new_val) -> {
-                //            lblShowPswd.setVisible(new_val);
-                //            //icon.setImage(new_val ? image : null);
                               enable_or_disable_buttons();
                 });
 
                 // txtPswd    is a PasswordField    (masked)
                 // txtVisPswd is a TextField        (not masked)
                 // Only 1 is visible based on if chbShowPswd is ticked
-                
+
                 // Bind properties. Toggle txtVisPswd and txtPswd
                 // visibility and managability properties mutually when chbShowPswd's state is changed.
                 // Because we want to display only one component (txtVisPswd or txtPswd)
@@ -888,17 +1320,17 @@ public class BackupGnuCashController implements Initializable {
                 // Ref http://stackoverflow.com/questions/17014012/how-to-unmask-a-javafx-passwordfield-or-properly-mask-a-textfield
                 //
                 // managedProperty : Defines whether or not this node's layout will be managed by it's parent.
-                
-              //txtVisPswd.managedProperty().bind(chbShowPswd.selectedProperty());
+                //      (doesn't need to change for this program as parent's visibility is not changed)
+//              txtVisPswd.managedProperty().bind(chbShowPswd.selectedProperty());
                 txtVisPswd.visibleProperty().bind(chbShowPswd.selectedProperty());
 
-              //txtPswd.managedProperty().bind(chbShowPswd.selectedProperty().not());
+//              txtPswd.managedProperty().bind(chbShowPswd.selectedProperty().not());
                 txtPswd.visibleProperty().bind(chbShowPswd.selectedProperty().not());
 
                 // Bind the textField and passwordField text values bidirectionally.
                 //      ie If 1 changes, the other also changes
                 txtVisPswd.textProperty().bindBidirectional(txtPswd.textProperty());
-                
+
                 enable_or_disable_buttons();
             }
         }

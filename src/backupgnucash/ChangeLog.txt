@@ -1,0 +1,19 @@
+V# 1.20 15 Jul 2016 Chris Good
+
+    * Check for Windows 7-Zip in Program Files (x86).
+    * Allow configurations for multiple books.
+    * Make ToolTips font bigger.
+
+    Note: Java 1.8.0_72 or later is now required due to bug 
+        https://bugs.openjdk.java.net/browse/JDK-8136838
+        which meant the value of ComboBox.getValue() was not correct in previous
+        versions.
+        As of 15 Jul 2016, the current Java version on Windows is 1.8.0_92 and
+        on Ubuntu 16.04 is 1.8.0_91.
+        Ubuntu 16.04 openjfx is version 8u60-b27-4 which works so long as when 
+        adding a new book, ENTER is pressed after typing a new book name into
+        the Book combobox. I.e. Press ENTER before leaving the combobox.
+
+V# 1.10 28 May 2016 Chris Good
+
+    * Initial release
