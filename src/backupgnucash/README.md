@@ -1,4 +1,4 @@
-#          BackupGnuCash 1.20 README.md file.
+#          BackupGnuCash 1.21 README.md file.
 
 This README.md is formatted for github markdown and is most easily read using a web browser
 to view https://github.com/goodvibes2/BackupGnuCashWin/blob/master/src/backupgnucash/README.md.
@@ -287,10 +287,10 @@ None
  or
  https://github.com/goodvibes2/BackupGnuCashLinux/blob/master/dist/BackupGnuCash.jar
 ```
-Being Java bytecode build from the same Java source files, either of the above
+Being Java bytecode built from the same Java source files, either of the above
 should work in either GNU/Linux or Windows.
 
-To download BackupGnuCash,jar
+To download BackupGnuCash.jar
 
 Paste either of the above URL's into a web browser,
 **Right** click on the **Raw** button, **Save target as**,
@@ -534,7 +534,7 @@ You'll need the Java Development Kit (jdk) and OpenJFX. E.g.
 sudo apt-get install openjdk-8-jdk openjfx
 ```
 OR
-##### Oracle Java 8 jdk (includes javaFX) #####
+##### Oracle Java 8 jdk (includes JavaFX) #####
 Download and install Oracle Java SE 8 Development Kit from
 http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html.
 
@@ -579,7 +579,7 @@ https://sourceforge.net/projects/sevenzip/.
 BackupGnuCash uses Java version 8 and JavaFX.
     Openjdk and OpenJFX are NOT available for Windows, so use Oracle versions.
 
-##### Oracle Java 8 jdk (includes javaFX) #####
+##### Oracle Java 8 jdk (includes JavaFX) #####
 Download and install Oracle Java SE 8 Development Kit from
 http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html.
 

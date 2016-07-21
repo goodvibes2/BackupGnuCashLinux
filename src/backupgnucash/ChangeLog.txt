@@ -1,3 +1,8 @@
+V# 1.21 21 Jul 2016 Chris Good
+
+    * Fix use of & instead of && (didn't actually matter).
+    * Use netbeans 8.1.
+
 V# 1.20 15 Jul 2016 Chris Good
 
     * Check for Windows 7-Zip in Program Files (x86).

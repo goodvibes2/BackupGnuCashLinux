@@ -715,7 +715,7 @@ public class BackupGnuCashController implements Initializable {
         }
 
         // enable or disable btnBupGC
-        if (boolUserOk && boolPswdOk & boolGcOk & boolDropBoxOk) {
+        if (boolUserOk && boolPswdOk && boolGcOk && boolDropBoxOk) {
             if (btnBupGC.isDisabled()) {        // if Disabled
                 btnBupGC.setDisable(false);     //     Enable
             }
