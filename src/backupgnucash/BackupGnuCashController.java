@@ -449,7 +449,7 @@ public class BackupGnuCashController implements Initializable {
             //System.out.println("My Exception Class " + ex.getClass());
 
             if (ex.getClass().toString().equals("class java.io.FileNotFoundException")) {
-                System.out.println("getUserDefaults: " + ex.getMessage());
+//              System.out.println("getUserDefaults: " + ex.getMessage());
                 Book.setDefaultBook(gcBook);
                 Book book = new Book(gcBook, gcDatFil, gcVer, dropBox);
                 bookComboBoxData.add(gcBook);

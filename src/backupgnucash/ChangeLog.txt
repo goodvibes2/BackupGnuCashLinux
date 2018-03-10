@@ -1,3 +1,10 @@
+V# 1.22 10 Mar 2018 Chris Good
+
+    * Fix scr/backupgnucash/README.md multiword Table Of Contents entries
+    * Remove warning when running for first time and settings have not yet been
+      saved:
+       getUserDefaults: /home/[user]/.BupGc/defaultProperties (No such file or directory)
+
 V# 1.21 21 Jul 2016 Chris Good
 
     * Fix use of & instead of && (didn't actually matter).

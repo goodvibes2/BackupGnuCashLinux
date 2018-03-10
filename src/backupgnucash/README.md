@@ -1,4 +1,4 @@
-#          BackupGnuCash 1.21 README.md file.
+#          BackupGnuCash 1.22 README.md file.
 
 This README.md is formatted for github markdown and is most easily read using a web browser
 to view https://github.com/goodvibes2/BackupGnuCashWin/blob/master/src/backupgnucash/README.md.
@@ -12,9 +12,9 @@ The last known BackupGnuCash stable series is the 1.2x series.
   - [Dependencies](#Dependencies)
   - [Running](#Running)
   - [Internationalization](#Internationalization)
-  - [Building and Installing](#Building and Installing)
-  - [Supported Platforms](#Supported Platforms)
-  - [Known Issues](#Known Issues)
+  - [Building and Installing](#BuildingAndInstalling)
+  - [Supported Platforms](#SupportedPlatforms)
+  - [Known Issues](#KnownIssues)
 
 ![Image of BackupGnuCash](https://github.com/goodvibes2/BackupGnuCashWin/blob/master/BackupGnuCash.PNG)
 
@@ -25,6 +25,13 @@ BackupGnuCash is an application for easily creating offsite encrypted backups
 of the data files used by the **GnuCash** personal finance manager.
 See http://www.gnucash.org for more information about GnuCash.
 
+BackupGnuCash is intended to be used with GnuCash data files that are stored in
+the default compressed XML format, or uncompressed XML format. It could probably
+be used to backup Sqlite format GnuCash data files if the Sqlite data file has
+been saved with a .gnucash file name extension (this has NOT been tested).
+BackupGnuCash should NOT be used with GnuCash data files saved in MySQL or
+PostgreSQL format as the data is spread over multiple files.
+
 This application is written in Java version 8 using JavaFX (or OpenJFX) for
 the graphical user interface. Java versions before 8 cannot be used with this
 application as they do not support JavaFX.
@@ -33,7 +40,7 @@ Free software **7-Zip** is used to perform the encryption.
 
 The BackupGnuCash project is _not_ part of the GnuCash project.
 
-If you need help, please email chris.good@ozemail.com.au and I will help
+If you need help, please email goodchris96@gmail.com and I will help
 if I can and have time available.
 Please read all of this document before asking for help.
 
@@ -94,7 +101,10 @@ The 3 files backed up into each archive file are
   Using BackupGnuCash is NOT a substitute for regular full system backups.
   Most customisations, that are not held in the 3 files saved by this app,
   do not often change, so using BackupGnuCash say daily, along with say
-  monthly full system backups, may be a reasonable backup strategy.
+  monthly full system backups, may be a reasonable GnuCash backup strategy.
+
+  BackupGnuCash is also useful for quick 1-off backups, say at end of month
+  or end of year, or before doing a major chart of accounts restructure.
 
 - One-time setup of
   1. **Book**.
@@ -360,7 +370,7 @@ Windows     C:\Users\[USER_NAME]\Documents\BackupGnuCash\BackupGnuCash.jar
 
 ### Dependencies for using prebuilt backupGnuCash.jar ###
 
-(See [Building and Installing](#Building and Installing) below if you wish to build from source)
+(See [Building and Installing](#BuildingAndInstalling) below if you wish to build from source)
 
 If you wish to download and use the prebuilt BackupGnuCash.jar from
 this github project, the following packages are required to be installed
@@ -373,7 +383,7 @@ Gnu/Linux flavours/versions.
 BackupGnuCash uses Java version 8 (or later) and JavaFX.
 These can be either the open **or** Oracle versions.
 
-See also [Known Issues](#Known Issues).
+See also [Known Issues](#KnownIssues).
 
 ###### Open Java ######
 Openjdk (http://openjdk.java.net)
@@ -413,7 +423,7 @@ Prebuilt openjfx is not available (as far as I can tell as at 31 May 2016)
 for Windows, so use Oracle Java 8 (which includes JavaFX) from
 http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html.
 
-See also [Known Issues](#Known Issues).
+See also [Known Issues](#KnownIssues).
 
 ##### 7-Zip #####
 Install from http://www.7-zip.org/download.html
@@ -495,7 +505,7 @@ Name the shortcut **Backup GnuCash**.
 BackupGnuCash is currently English only.
 
 
-<a name="Building and Installing"></a>
+<a name="BuildingAndInstalling"></a>
 ## Building and Installing ##
 ---------------------
 
@@ -671,10 +681,10 @@ I suggest after extracting, rename folder
   C:\Users\[USER_NAME]\Documents\NetBeansProjects\BackupGnuCash
 ```
     
-<a name="Supported Platforms"></a>
+<a name="SupportedPlatforms"></a>
 ## Supported Platforms ##
 
-BackupGnuCash 1.1x is known to work with the following operating systems
+BackupGnuCash is known to work with the following operating systems
 
 - GNU/Linux             -- x86
 - Windows               -- x86
@@ -684,7 +694,7 @@ does, so long as Java 8 (open or Oracle), JavaFX or openJFX, and 7-Zip are
 available.
 
 
-<a name="Known Issues"></a>
+<a name="KnownIssues"></a>
 ## Known Issues ##
 
 1) From BackupGnuCash version 1.20 15 Jul 2016, Java 1.8.0_72 (8u72) or later is
