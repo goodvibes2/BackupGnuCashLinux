@@ -16,6 +16,7 @@
  */
 package backupgnucash;
 
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -29,6 +30,8 @@ public class Book {
     private final SimpleStringProperty bookName;
     private final SimpleStringProperty gcDat;
     private final SimpleStringProperty gcVer;
+    private final SimpleBooleanProperty gcV2Cfg;
+    private final SimpleBooleanProperty gcV3Cfg;
     private final SimpleStringProperty dropBox;
     
     // class variables
@@ -36,18 +39,20 @@ public class Book {
     static final StringProperty defaultProp = new SimpleStringProperty();
 
     // constructor
-    public Book(String startBookName, String startGcDat, String startGcVer, String startDropBox) {
+    public Book(String startBookName, String startGcDat, String startGcVer,
+            Boolean startGcV2Cfg, Boolean startGcV3Cfg, String startDropBox) {
         this.bookName = new SimpleStringProperty(startBookName);
         this.gcDat = new SimpleStringProperty(startGcDat);
         this.gcVer = new SimpleStringProperty(startGcVer);
+        this.gcV2Cfg = new SimpleBooleanProperty(startGcV2Cfg);
+        this.gcV3Cfg = new SimpleBooleanProperty(startGcV3Cfg);
         this.dropBox = new SimpleStringProperty(startDropBox);
     }
  
     // class methods
     public static String getDefaultBook() {
         return defaultBook;
-}
-    
+    }
     public static void setDefaultBook(String newDefaultBook) {
         Book.defaultBook = newDefaultBook;
         Book.defaultProp.set(newDefaultBook);
@@ -75,6 +80,22 @@ public class Book {
         gcVer.set(gcVerStr);
     }
     
+    public Boolean getGcV2Cfg() {
+//        System.out.println("book.getGcV2Cfg returns: " + gcV2Cfg.get() );
+        return gcV2Cfg.get();
+    }
+    public void setGcV2Cfg(Boolean gcV2CfgBool) {
+        gcV2Cfg.set(gcV2CfgBool);
+    }
+
+    public Boolean getGcV3Cfg() {
+//        System.out.println("book.getGcV3Cfg returns: " + gcV3Cfg.get() );
+        return gcV3Cfg.get();
+    }
+    public void setGcV3Cfg(Boolean gcV3CfgBool) {
+        gcV3Cfg.set(gcV3CfgBool);
+    }
+
     public String getDropBox() {
         return dropBox.get();
     }

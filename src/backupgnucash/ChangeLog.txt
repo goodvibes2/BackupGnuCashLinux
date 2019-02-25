@@ -1,3 +1,11 @@
+V# 1.3.0 24 Feb 2019 Chris Good
+
+    * Mods for GnuCash V3.
+    * Optionally back up V2 + V3 configuration folders and files.
+    * Backup more V2 configuration files, including Windows registry,
+      Linux dconf, and AqBanking settings.
+    * Add Help button.
+
 V# 1.22 10 Mar 2018 Chris Good
 
     * Fix scr/backupgnucash/README.md multiword Table Of Contents entries

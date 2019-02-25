@@ -60,8 +60,8 @@ class StreamGobbler extends Thread
             {
                 if (pw != null)
                     pw.println(line);
-                System.out.println(type + ">" + line);    
-                // Following line causes : 
+                System.out.println(type + ">" + line);
+                // Following line causes :
                 //  IllegalStateException: Not on FX application thread;
                 // You can only update gui elements from the application thread!
                 //ta.appendText(type + ">" + line + "\n");
@@ -70,7 +70,7 @@ class StreamGobbler extends Thread
                 pw.flush();
         } catch (IOException ioe)
             {
-            ioe.printStackTrace();  
+            ioe.printStackTrace();
             }
     }
 }

@@ -30,10 +30,15 @@
    28/06/2016 1.20 1. Also check for Windows 7-Zip in Program Files (x86).
                    2. Allow configurations for multiple books.
                    3. Make ToolTips font bigger (in BackupGnuCash.fxml).
+   27/05/2018 1.3.0 Mods for GnuCash 3, add options for backing up V2 + V3 
+                    configuration and add Help button.
+
+   See src/backupgnucash/ChangeLog.txt
 */
 
 package backupgnucash;
 
+import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,6 +46,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import static java.lang.Thread.sleep;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,6 +67,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -109,6 +118,8 @@ public class BackupGnuCashController implements Initializable {
     @FXML
     private Button btnDelete;
     @FXML
+    private Button btnHelp;
+    @FXML
     private CheckBox defaultBookChb;
     @FXML
     private Label lblGCDatFilStr;
@@ -122,6 +133,12 @@ public class BackupGnuCashController implements Initializable {
     private Label lblGCVer;
     @FXML
     private TextField txtGcVer;
+    @FXML
+    private Label lblGcCfgData;
+    @FXML
+    private CheckBox chbGcV2Cfg;
+    @FXML
+    private CheckBox chbGcV3Cfg;
     @FXML
     private Label lblDropBox;
     @FXML
@@ -167,22 +184,41 @@ public class BackupGnuCashController implements Initializable {
     private static String gcBook = "MyBook";   // current book name
     private static String gcDatFil; // initial default GnuCash data file
     private static String gcVer = ""; // optional version backup filename suffix
+    private static Boolean gcV2Cfg = true; // Backup GnuCash V2 config files ?
+    private static Boolean gcV3Cfg = true; // Backup GnuCash V3 config files ?
+
     private static String dropBox; // inital default Dropbox dir
 
     private static Path pathGcDatFilStr;
     private static final String HOME_DIR = System.getProperty("user.home");
-    private static final String ERR_FILE = HOME_DIR + FILE_SEPARATOR
-            + ".BupGc" + FILE_SEPARATOR + "BackGnuCash.err";
-    private static final String OUT_FILE = HOME_DIR + FILE_SEPARATOR
-            + ".BupGc" + FILE_SEPARATOR + "BackGnuCash.out";
-
+    private static final String PROPERTIES_DIR = ".BupGc";
+    private static final String ERR_FILE = HOME_DIR + FILE_SEPARATOR +
+            PROPERTIES_DIR + FILE_SEPARATOR + "BackGnuCash.err";
+    private static final String OUT_FILE = HOME_DIR + FILE_SEPARATOR +
+            PROPERTIES_DIR + FILE_SEPARATOR + "BackGnuCash.out";
+    private static final String OUT_REG_FILE = HOME_DIR + FILE_SEPARATOR +
+            PROPERTIES_DIR + FILE_SEPARATOR + "GnuCashGSettings.reg";
+    private static final String OUT_DCONF_FILE = HOME_DIR + FILE_SEPARATOR +
+            PROPERTIES_DIR + FILE_SEPARATOR + "gnucash.dconf";
     // Saved Settings
-    private static final String DEF_PROP = HOME_DIR + FILE_SEPARATOR
-            + ".BupGc" + FILE_SEPARATOR + "defaultProperties";
+    private static final String DEF_PROP = HOME_DIR + FILE_SEPARATOR +
+            PROPERTIES_DIR + FILE_SEPARATOR + "defaultProperties";
     //  default properties
     private static final Properties defaultProps = new Properties();
 
+    private static final String HELP_URL = "https://github.com/goodvibes2/BackupGnuCashWin/blob/master/src/backupgnucash/README.md";
+
+
+    // firstTime: true when enable_or_disable_buttons() is run for first time
+    //  (ie from initialize()), which means controls are not ready to accept focus,
+    //  so have to delay setting focus to password
     private static boolean firstTime = true;
+
+    // loadingScreen: true when loading screen fields from saved book.
+    // Used to stop screen control listeners from doing anything while
+    //  loading screen controls
+    private static boolean loadingScreen = true;
+
     private static String bookSelectionTarget = "";
 
     private static final Font BOLD_FONT = Font.font("System", FontWeight.BOLD, 14);
@@ -213,6 +249,22 @@ public class BackupGnuCashController implements Initializable {
     }
 
     @FXML
+    public void handleBtnActionHelp(Event e) throws IOException {
+
+        if (Desktop.isDesktopSupported()) {
+            try {
+                Desktop.getDesktop().browse(new URI(HELP_URL));
+            } catch (URISyntaxException ex) {
+                Logger.getLogger(BackupGnuCashController.class.getName()).log(Level.SEVERE,
+                        null, ex);
+            }
+        } else {
+            taLog.appendText("Error: Desktop is not supported. Cannot open " +
+                    HELP_URL + "\n");
+        }
+    }
+
+    @FXML
     public void handleBtnActionSaveSettings(Event e) throws IOException {
 
         int i = 0;
@@ -238,6 +290,9 @@ public class BackupGnuCashController implements Initializable {
             defaultProps.setProperty("dropBox." + suffix, refBook.getDropBox());
             defaultProps.setProperty("gcDatFil." + suffix, refBook.getGcDat());
             defaultProps.setProperty("gcVer." + suffix, refBook.getGcVer());
+            defaultProps.setProperty("gcV2Cfg." + suffix, refBook.getGcV2Cfg().toString());
+            defaultProps.setProperty("gcV3Cfg." + suffix, refBook.getGcV3Cfg().toString()
+            );
         }
 
         try (FileOutputStream out = new FileOutputStream(DEF_PROP)) {
@@ -266,7 +321,7 @@ public class BackupGnuCashController implements Initializable {
     // Handle selections in editable bookComboBox
 
     // This event occurs whenever a new item is selected.
-    // This can be because a new item as clicked in the dropdown list
+    // This can be because a new item is clicked in the dropdown list
     //  or a new item was keyed into the combobox (and action key ENTER typed or focus lost)
     //  or a new item is automatically selected because the previous
     //   selected item has been removed from the item list.
@@ -290,8 +345,9 @@ public class BackupGnuCashController implements Initializable {
             selected = bookComboBox.getValue().toString();
         }
         //String editted = bookComboBox.getEditor().getText();
-        //System.out.println("handleBookComboBoxOnAction(): selected: " + selected
-        //    + " editted=" + editted);
+        System.out.println("handleBookComboBoxOnAction(): selected: " + selected
+        //  + " editted=" + editted
+        );
 
         if
         ( ( (selected != null) && (! selected.isEmpty()))
@@ -304,6 +360,8 @@ public class BackupGnuCashController implements Initializable {
             //   add the new book instance to Book class, bookMap and
             //   bookComboBoxData and make it the
             //   selected combobox item
+
+            loadingScreen = true;   // disable listeners
             if (bookMap.containsKey(selected)) {
                 // Get ref to book object from bookMap
                 Book book = (Book)bookMap.get(selected);
@@ -311,9 +369,12 @@ public class BackupGnuCashController implements Initializable {
 //                System.out.println("bookComboBox.setOnAction: txtGcDatFilStr.setText to " + book.getGcDat());
                 txtGcDatFilStr.setText(book.getGcDat());
                 txtGcVer.setText(book.getGcVer());
+                chbGcV2Cfg.setSelected(book.getGcV2Cfg());
+                chbGcV3Cfg.setSelected(book.getGcV3Cfg());
                 txtDropBox.setText(book.getDropBox());
             } else {
-                Book book = new Book(selected, txtGcDatFilStr.getText(), txtGcVer.getText(), txtDropBox.getText());
+                Book book = new Book(selected, txtGcDatFilStr.getText(), txtGcVer.getText(),
+                        chbGcV2Cfg.isSelected(), chbGcV3Cfg.isSelected(), txtDropBox.getText());
                 bookMap.put(selected, book);
                 //bookComboBox.setValue(selected);     // set selected Value - do NOT do here causes loop
                 bookComboBoxData.add(selected);
@@ -327,7 +388,9 @@ public class BackupGnuCashController implements Initializable {
                     defaultBookChb.setSelected(false);
                 }
             }
+            loadingScreen = false;  // enable listeners
         }
+        enable_or_disable_buttons();
     }
 
     public void getUserDefaults() {
@@ -353,10 +416,13 @@ public class BackupGnuCashController implements Initializable {
             // Only load the old format properties if the new properties
             // are not defined so we only do the conversion once
 
+            gcV2Cfg = true; // Did not exist in versions before 1.20
+            gcV3Cfg = true; // Did not exist in versions before 1.20
+
             // Check for existence of new property gcBook.0
             tmpStr = defaultProps.getProperty("gcBook.0");
             if ((tmpStr == null) || (tmpStr.isEmpty())) {
-                // new property does not exist so load old properties
+                // new property does NOT exist so load old properties
                 tmpStr = defaultProps.getProperty("gcDatFil");
                 if ((tmpStr != null) && (!tmpStr.isEmpty())) {
                     gcDatFil = tmpStr;
@@ -400,9 +466,11 @@ public class BackupGnuCashController implements Initializable {
                 gcBook = tmpStr;
                 gcDatFil = defaultProps.getProperty("gcDatFil." + suffix);
                 gcVer = defaultProps.getProperty("gcVer." + suffix);
+                gcV2Cfg = Boolean.valueOf(defaultProps.getProperty("gcV2Cfg." + suffix));
+                gcV3Cfg = Boolean.valueOf(defaultProps.getProperty("gcV3Cfg." + suffix));
                 dropBox = defaultProps.getProperty("dropBox." + suffix);
 
-                Book book = new Book(gcBook, gcDatFil, gcVer, dropBox);
+                Book book = new Book(gcBook, gcDatFil, gcVer, gcV2Cfg, gcV3Cfg, dropBox);
                 bookComboBoxData.add(gcBook);
                 bookMap.put(gcBook, book);  // save ref to book in hashmap
 
@@ -410,13 +478,15 @@ public class BackupGnuCashController implements Initializable {
                     txtGcDatFilStr.setText(gcDatFil);
 //                    System.out.println("getUserDefaults(): txtGcDatFilStr set to " + gcDatFil);
                     txtGcVer.setText(gcVer);
+                    chbGcV2Cfg.setSelected(gcV2Cfg);
+                    chbGcV3Cfg.setSelected(gcV3Cfg);
                     txtDropBox.setText(dropBox);
                     defaultBookChb.setSelected(true);
                 }
                 //i++;
             }
             if (bookComboBoxData.isEmpty()) {
-                Book book = new Book(gcBook, gcDatFil, gcVer, dropBox);
+                Book book = new Book(gcBook, gcDatFil, gcVer, gcV2Cfg, gcV3Cfg, dropBox);
                 bookComboBoxData.add(gcBook);
                 bookMap.put(gcBook, book);
             }
@@ -451,13 +521,15 @@ public class BackupGnuCashController implements Initializable {
             if (ex.getClass().toString().equals("class java.io.FileNotFoundException")) {
 //              System.out.println("getUserDefaults: " + ex.getMessage());
                 Book.setDefaultBook(gcBook);
-                Book book = new Book(gcBook, gcDatFil, gcVer, dropBox);
+                Book book = new Book(gcBook, gcDatFil, gcVer, gcV2Cfg, gcV3Cfg, dropBox);
                 bookComboBoxData.add(gcBook);
                 bookMap.put(gcBook, book);
 //              bookComboBox.setItems(new SortedList<>(bookComboBoxData, Collator.getInstance()));  // JDK-8087838
                 bookComboBox.setItems(bookComboBoxData);
                 bookComboBox.setValue(gcBook);
                 defaultBookChb.setSelected(true);
+                chbGcV2Cfg.setSelected(gcV2Cfg);
+                chbGcV3Cfg.setSelected(gcV3Cfg);
             } else {
                 Logger.getLogger(BackupGnuCashController.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -492,8 +564,214 @@ public class BackupGnuCashController implements Initializable {
         return txtPswd.getText().length() > 7 ;
     }
 
-    private static boolean isFirstTime() {
-        return firstTime;
+    boolean exportRegistry() {
+
+        // Use reg.exe to export GnuCash registry entries to a text file which can be backed up
+
+        int exitVal = 0;
+        String[] cmdExport = new String[5];
+
+        // chk C:\Windows\System32\reg.exe exists
+        //  %SystemRoot% is usually C:\Windows
+        Path pathRegExe = Paths.get(System.getenv("SystemRoot") + "\\System32\\reg.exe");
+        if (! Files.isExecutable(pathRegExe)) {
+            taLog.appendText("Error: Cannot find or execute " +
+                pathRegExe.toString() + " on either C: or E:" );
+            return false;
+        }
+
+        Runtime rt = Runtime.getRuntime();
+        System.out.println("Execing reg.exe");
+        taLog.appendText("Exporting GnuCash registry entries...\n");
+
+        // Set up cmdExport to be like
+        //  C:\Windows\System32\reg.exe
+        //    EXPORT HKCU\Software\GSettings\org\gnucash C:\Users\[Name]\.BupGC\GnuCashGSettings.reg /y
+        cmdExport[0] = pathRegExe.toString();
+        cmdExport[1] = "EXPORT";
+        cmdExport[2] = "HKCU\\Software\\GSettings\\org\\gnucash";
+        cmdExport[3] = OUT_REG_FILE;
+        cmdExport[4] = "/y";    // Force overwriting an existing output file without prompt
+
+        try {
+            Process proc = rt.exec(cmdExport);
+
+            // make sure output is consumed so system buffers do not fill up
+            // and cause the process to hang
+
+            /*  Because any updates to the JavaFX gui must be done from the JavaFX
+                application thread, it is not possible to update taLog from
+                StreamGobbler, so I use StreamGobbler to put stdout &
+                stderr to files, and just copy the contents of the files to taLog
+                when the 7zip'ing finishes.
+             */
+
+            try (   // with resources
+                FileOutputStream fosErr = new FileOutputStream(ERR_FILE);
+                FileOutputStream fosOut = new FileOutputStream(OUT_FILE)
+            )
+            {
+                // any error messages (stderr) ?
+                StreamGobbler errorGobbler = new StreamGobbler(proc.getErrorStream(), "ERROR", fosErr);
+                // any output?
+                StreamGobbler outputGobbler = new StreamGobbler(proc.getInputStream(), "OUTPUT", fosOut);
+                // kick them off - creates new threads
+                errorGobbler.start();
+                outputGobbler.start();
+                // any error?
+                exitVal = proc.waitFor();
+                System.out.println("ExitValue: " + exitVal);
+                taLog.appendText("reg.exe ExitValue: " + exitVal + "\n");
+                fosErr.flush();
+                fosOut.flush();
+            }
+            //fosErr.close();  // done automatically when try with resources ends
+            //fosOut.close();  // done automatically when try with resources ends
+        } catch (Throwable t)
+        {
+            taLog.appendText("reg.exe FAILED");
+            if (exitVal == 0) {
+                exitVal = 99;
+            }
+            t.printStackTrace();
+        }
+
+        // add stderr of reg.exe process to taLog
+        Path pthErrFil = Paths.get(ERR_FILE);
+        try (InputStream in = Files.newInputStream(pthErrFil);
+            BufferedReader reader =
+                new BufferedReader(new InputStreamReader(in))
+        ) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+                if (!line.equals("")) {
+                    taLog.appendText(line + "\n");
+                }
+            }
+        } catch (IOException x) {
+            System.err.println(x);
+            taLog.appendText("IOException reading " + pthErrFil);
+        }
+        // add stdout of 7-zip process to taLog
+        Path pthOutFil = Paths.get(OUT_FILE);
+        try (InputStream in = Files.newInputStream(pthOutFil);
+            BufferedReader reader =
+                new BufferedReader(new InputStreamReader(in))) {
+//            String line = null;
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+                if (! line.equals("")) {
+                    taLog.appendText(line + "\n");
+                }
+            }
+        } catch (IOException x) {
+            System.err.println(x);
+            taLog.appendText("IOException reading " + pthOutFil);
+        }
+
+        if (exitVal != 0) {
+            taLog.appendText("reg.exe proc.waitFor() returned: " + exitVal + "\n");
+            return false;
+        }
+
+        return true;
+    }
+
+
+boolean exportDconf() {
+
+        // Use Linux dconf to dump GnuCash dconf entries to a text file which can be backed up
+        // E.g dconf dump /org/gnucash/ > $HOME/.BupGc/gnucash.dconf
+        
+        int exitVal = 0;
+        String[] cmdExport = new String[3];
+        String strDconf = "/usr/bin/dconf";
+        Path pathDconf = Paths.get(strDconf);
+        if (! Files.isExecutable(pathDconf)) {
+            taLog.setText("Error: Cannot find or execute " + strDconf );
+            return false;
+        }
+
+        Runtime rt = Runtime.getRuntime();
+        System.out.println("Execing " + strDconf);
+        taLog.appendText("Dumping GnuCash dconf entries...\n");
+
+        // Set up cmdExport to be like
+        //  dconf dump /org/gnucash/ > $HOME/.BupGc/gnucash.dconf
+        cmdExport[0] = pathDconf.toString();
+        cmdExport[1] = "dump";
+        cmdExport[2] = "/org/gnucash/";
+
+        try {
+            Process proc = rt.exec(cmdExport);
+
+            // make sure output is consumed so system buffers do not fill up
+            // and cause the process to hang
+
+            /*  Because any updates to the JavaFX gui must be done from the JavaFX
+                application thread, it is not possible to update taLog from
+                StreamGobbler, so use StreamGobbler to put stdout & stderr to
+                files, and copy the contents of the ERR_FILE to taLog
+                when dconf finishes.
+             */
+
+            try (   // with resources
+                FileOutputStream fosErr = new FileOutputStream(ERR_FILE);
+                FileOutputStream fosOut = new FileOutputStream(OUT_DCONF_FILE);
+            )
+            {
+                // any error messages (stderr) ?
+                StreamGobbler errorGobbler = new StreamGobbler(proc.getErrorStream(), "ERROR", fosErr);
+                // any output?
+                StreamGobbler outputGobbler = new StreamGobbler(proc.getInputStream(), "OUTPUT", fosOut);
+                // kick them off - creates new threads
+                errorGobbler.start();
+                outputGobbler.start();
+                // any error?
+                exitVal = proc.waitFor();
+                sleep(1000);        // wait 1 sec for StreamGobbler Threads to finish reading
+                System.out.println("ExitValue: " + exitVal);
+                taLog.appendText("dconf ExitValue: " + exitVal + "\n");
+                fosErr.flush();
+                fosOut.flush();
+            }
+            //fosErr.close();  // done automatically when try with resources ends
+            //fosOut.close();  // done automatically when try with resources ends
+        } catch (Throwable t)
+        {
+            taLog.appendText("dconf FAILED");
+            if (exitVal == 0) {
+                exitVal = 99;
+            }
+            t.printStackTrace();
+        }
+
+        // add stderr of dconf process to taLog
+        Path pthErrFil = Paths.get(ERR_FILE);
+        try (InputStream in = Files.newInputStream(pthErrFil);
+            BufferedReader reader =
+                new BufferedReader(new InputStreamReader(in))
+        ) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+                if (!line.equals("")) {
+                    taLog.appendText(line + "\n");
+                }
+            }
+        } catch (IOException x) {
+            System.err.println(x);
+            taLog.appendText("IOException reading " + pthErrFil);
+        }
+
+        if (exitVal != 0) {
+            taLog.appendText("dconf proc.waitFor() returned: " + exitVal + "\n");
+            return false;
+        }
+
+        return true;
     }
 
     void setTooltips() {
@@ -505,7 +783,7 @@ public class BackupGnuCashController implements Initializable {
             "For example: MyBook Live\n" +
             "To add a new book name:\n" +
             " Type the new book name in this combobox, then press ENTER,\n"  +
-            " then change the other fields (GnuCash data, Version and Dropbox).\n" +
+            " then change the other fields.\n" +
             "Use the Save Settings button to save the settings for all books."
         ));
 
@@ -522,8 +800,12 @@ public class BackupGnuCashController implements Initializable {
             "To delete the default book, first make another book the default."
         ));
 
+        btnHelp.setTooltip(new Tooltip(
+            "Help:\nOpen in the default web brower:\n" + HELP_URL
+        ));
+        
         btnSaveSettings.setTooltip(new Tooltip(
-            "Save Settings:\nSave all book settings in\n" +
+            "Save Settings:\nSave settings for all books in\n" +
             DEF_PROP + "\n" + "The password is NOT saved."
         ));
 
@@ -536,11 +818,49 @@ public class BackupGnuCashController implements Initializable {
             "GnuCash Version:\nOptional suffix added to GnuCash backup file name.\n"
         ));
 
+        chbGcV2Cfg.setTooltip(new Tooltip(
+            "Backup GnuCash V2 configuration folders and files?\n"
+          + " E.g. Among others,\n"
+          + "   Windows: C:\\Users\\[USERNAME]\\.gnucash\n"
+          + "   Linux:   /home/[Name]/.gnucash\n"
+          + "Use the Help button to see full details."
+/*          + "  This includes, among others, saved report options\n"
+          + "    E.g. Windows: C:\\Users\\[USERNAME]\\.gnucash\\saved-reports-2.4\n"
+          + "         Linux:   $HOME/.gnucash/saved-reports-2.4\n"
+          + "  and metadata\n"
+          + "    E.g. Windows: C:\\Users\\[USERNAME]\\.gnucash\\books\\[BookName].gnucash.gcm\n"
+          + "         Linux    $HOME//.gnucash\\books\\[BookName].gnucash.gcm\n"
+          + " GTK2:\n"
+          + "   Windows: C:\\Users\\[Name]\\.gtkrc-2.0\n"
+          + "        and C:\\Users\\[Name]\\.gtkrc-2.0.gnucash"
+          + Registry + aqbanking
+*/
+        ));
+
+        chbGcV3Cfg.setTooltip(new Tooltip(
+            "Backup GnuCash V3 configuration folders and files?\n"
+          + " E.g. Among others,\n"
+          + "   Windows: C:\\Users\\[Name]\\AppData\\Roaming\\GnuCash\n"
+          + "   Linux:   /home/[Name]/.config/gnucash\n"
+          + "Use the Help button to see full details."
+/*          "This backs up the user configuration directory and sub-folders\n" +
+            " E.g. C:\\Users\\[USERNAME]\\AppData\\Gnucash\n" +
+            "This includes amoung other things\n" +
+            " the saved report options\n" +
+            "  E.g. C:\\Users\\[USERNAME]\\AppData\\Gnucash\\saved-reports-2.n\n" +
+            " and metadata\n" +
+            "  E.g. C:\\Users\\[USERNAME]\\AppData\\GnuCash\\books\\[BookName].gnucash.gcm\n" +
+            " and the contents of the registry key\n" +
+            "  HKCU\\Software\\GSettings\\org\\gnucash"
+*/
+        ));
+
         txtDropBox.setTooltip(new Tooltip(
             "Dropbox Base Directory:\n" +
+            "The local directory which is replicated to the cloud by Dropbox\n" +
+            "or another cloud storage service.\n" +
             "The encrypted compressed backup file will be saved in a sub-directory\n" +
-            "of this directory.\n" +
-            "The GnuCash backup file will be saved in a sub-directory called 'GnuCash'.\n"
+            "of this directory called 'GnuCash'.\n"
         ));
 
         // Tooltips (same) for txtPswd & txtVisPswd
@@ -554,23 +874,17 @@ public class BackupGnuCashController implements Initializable {
 
         btnBupGC.setTooltip(new Tooltip(
             "Backup GnuCash:\n" +
-            "The data file will be archived (compressed and encrypted) to the 'GnuCash' sub-directory\n" +
-            "of the Dropbox directory. The data file itself remains unaltered.\n" +
-            "Two additional GnuCash files are included in the archive:\n" +
-            "1. The saved reports configuration file:\n" +
-            " " + HOME_DIR + FILE_SEPARATOR + ".gnucash" + FILE_SEPARATOR +
-            "saved-reports-2.4\n" +
-            "2. The preferences file:\n" +
-            " " + HOME_DIR + FILE_SEPARATOR + ".gnucash" + FILE_SEPARATOR +
-            "books" + FILE_SEPARATOR + "[BookName].gnucash.gcm"
+            "The selected folders and files will be archived (compressed and encrypted) to the 'GnuCash' sub-directory\n" +
+            "of the Dropbox directory. The folders and files themselves remains unaltered."
         ));
 
     }
 
     void enable_or_disable_buttons() {
-//        System.out.println("Start enable_or_disable_buttons" +
-//            " bookComboBox.getValue()=" + bookComboBox.getValue() +
-//            " txtGcDatFilStr.getText()=" + txtGcDatFilStr.getText());
+        System.out.println("Start enable_or_disable_buttons"
+            + " bookComboBox.getValue()=" + bookComboBox.getValue()
+//          + " txtGcDatFilStr.getText()=" + txtGcDatFilStr.getText()
+        );
         boolean boolUserOk = false;
         boolean boolPswdOk = false;
         boolean boolGcOk = false;
@@ -591,7 +905,8 @@ public class BackupGnuCashController implements Initializable {
 
         // Note:    Disable  property : Defines the individual disabled state of this Node.
         //                              'Disable' may be false and 'Disabled true' if a parent node is Disabled.
-        //          Disabled propery  : Indicates whether or not this Node is disabled. Could be 'Disabled' because parent node is disabled.
+        //          Disabled propery  : Indicates whether or not this Node is disabled.
+        //                              Could be 'Disabled' because parent node is disabled.
 
         // Test: isDisabled(), Set: setDisable() NOT setDisabled()
 
@@ -632,26 +947,102 @@ public class BackupGnuCashController implements Initializable {
                     Paths.get(txtGcDatFilStr.getText() + ".LCK") +
                     " exists - GnuCash may be open or may have crashed leaving the lockfile\n");
             } else {
-                // chk C:\Users\[Name]\.gnucash\saved-reports-2.4 exists
-                Path pathGcSavRpt = Paths.get(HOME_DIR + FILE_SEPARATOR +
-                        ".gnucash" + FILE_SEPARATOR + "saved-reports-2.4");
-                if (Files.isReadable(pathGcSavRpt)) {
+                boolGcOk = true;
+                FileName fileName = new FileName(txtGcDatFilStr.getText(),
+                    FILE_SEPARATOR, '.');
+
+                Path pathGcSavRpt;
+                Path pathGcGcm;
+
+                if (chbGcV2Cfg.isSelected()) {
+                    // chk C:\Users\[Name]\.gnucash\saved-reports-2.4 exists
+                    pathGcSavRpt = Paths.get(HOME_DIR + FILE_SEPARATOR +
+                            ".gnucash" + FILE_SEPARATOR + "saved-reports-2.4");
+                    if (Files.isReadable(pathGcSavRpt)) {
+                        taLog.appendText("Info: Found GnuCash 2 Saved Reports " + pathGcSavRpt.toString() + "\n");
+                    } else {
+                        taLog.appendText("Info: GnuCash 2 Saved Reports " + pathGcSavRpt.toString() +
+                            " is not readable or does not exist\n");
+                    }
+
                     // chk C:\Users\[Name]\.gnucash\books\MyFile.gnucash.gcm exists
                     //       (Linux: $HOME/.gnucash\books\MyFile.gnucash.gcm)
-                    FileName fileName = new FileName(txtGcDatFilStr.getText(),
+                    fileName = new FileName(txtGcDatFilStr.getText(),
                         FILE_SEPARATOR, '.');
-                    Path pathGcGcm = Paths.get(HOME_DIR + FILE_SEPARATOR +
+                    pathGcGcm = Paths.get(HOME_DIR + FILE_SEPARATOR +
                         ".gnucash" + FILE_SEPARATOR + "books" + FILE_SEPARATOR +
                         fileName.filename() + "." + fileName.extension()+ ".gcm");
                     if (Files.isReadable(pathGcGcm)) {
-                        boolGcOk = true;
+                        taLog.appendText("Info: Found GnuCash 2 Configuration metadata " +
+                            pathGcGcm.toString() + "\n");
                     } else {
-                        taLog.appendText("Error: " + pathGcGcm.toString() +
-                            " is not readable or does not exist");
+                        taLog.appendText("Info: GnuCash 2 Configuration metadata " +
+                            pathGcGcm.toString() + " is not readable or does not exist\n");
                     }
-                } else {
-                    taLog.appendText("Error: " + pathGcSavRpt.toString() +
-                        " is not readable or does not exist");
+                }
+                
+                if (chbGcV3Cfg.isSelected()) {      
+                    // GnuCash V3
+                    // Chk Saved Reports file exists
+                    // GnuCash V3 uses saved-reports-2.4 if no saved-reports-2.8 exists
+                    //  but only writes to saved-reports-2.8
+
+                    if (OS_NAME.startsWith("Windows")) {
+                        // %AppData%\Roaming\GnuCash\saved-reports-2.8
+                        //   Note %APPDATA% is usually C:\Users\%USERNAME%\AppData\Roaming
+                        pathGcSavRpt = Paths.get(System.getenv("APPDATA") +
+                            FILE_SEPARATOR + "GnuCash" + FILE_SEPARATOR +
+                            "saved-reports-2.8");
+                    } else {
+                        // Linux   $HOME/.local/share/gnucash/saved-reports-2.8
+                        pathGcSavRpt = Paths.get(HOME_DIR + FILE_SEPARATOR + ".local" +
+                            FILE_SEPARATOR + "share" + FILE_SEPARATOR + "gnucash" +
+                            FILE_SEPARATOR + "saved-reports-2.8");
+                    }
+                    if (Files.isReadable(pathGcSavRpt)) {
+                        taLog.appendText("Info: Found GnuCash 3 Saved Reports " +
+                            pathGcSavRpt.toString() + "\n");
+                    } else {
+                        // chk saved-reports-2.4 exists
+                        if (OS_NAME.startsWith("Windows")) {
+                            pathGcSavRpt = Paths.get(System.getenv("APPDATA") +
+                                "\\GnuCash\\saved-reports-2.4");
+                        } else {
+                            // Linux
+                            pathGcSavRpt = Paths.get(HOME_DIR + FILE_SEPARATOR +
+                                ".local" + FILE_SEPARATOR + "share" + FILE_SEPARATOR +
+                                "gnucash" + FILE_SEPARATOR + "saved-reports-2.4");
+                        }
+                        if (Files.isReadable(pathGcSavRpt)) {
+                            taLog.appendText("Info: Found GnuCash 3 " + pathGcSavRpt.toString() + "\n");
+                        } else {
+                            taLog.appendText("Info: GnuCash 3 " + pathGcSavRpt.toString() +
+                                " is not readable or does not exist\n");
+                        }
+                    }
+
+                    // Chk metadata
+                    if (OS_NAME.startsWith("Windows")) {
+                        // chk %APPDATA%\GnuCash\books\[BOOK].gnucash.gcm exists
+                        //   Note %APPDATA% is usually C:\Users\%USERNAME%\AppData\Roaming
+                        //   GnuCash V#2.7+
+                        pathGcGcm = Paths.get(System.getenv("APPDATA") + FILE_SEPARATOR +
+                            "GnuCash" + FILE_SEPARATOR + "books" + FILE_SEPARATOR +
+                            fileName.filename() + "." + fileName.extension() + ".gcm");
+                    } else {
+                        // chk $HOME/.local/share/gnucash/books/[book].gnucash.gcm exists
+                        pathGcGcm = Paths.get(HOME_DIR + FILE_SEPARATOR + ".local" +
+                            FILE_SEPARATOR + "share" + FILE_SEPARATOR + "gnucash" +
+                            FILE_SEPARATOR + "books" + FILE_SEPARATOR +
+                            fileName.filename() + "." + fileName.extension()+ ".gcm");
+                    }
+                    if (Files.isReadable(pathGcGcm)) {
+                        taLog.appendText("Info: Found GnuCash 3 Configuration metadata " +
+                            pathGcGcm.toString() + "\n");
+                    } else {
+                        taLog.appendText("Info: GnuCash 3 Configuration metadata " +
+                            pathGcGcm.toString() + " is not readable or does not exist\n");
+                    }
                 }
             }
         } else {
@@ -739,16 +1130,23 @@ public class BackupGnuCashController implements Initializable {
                 Book book = (Book)bookMap.get(bookComboBox.getValue());
                 book.setGcDat(txtGcDatFilStr.getText());
                 book.setGcVer(txtGcVer.getText());
+                book.setGcV2Cfg(chbGcV2Cfg.isSelected());
+                book.setGcV3Cfg(chbGcV3Cfg.isSelected());
                 book.setDropBox(txtDropBox.getText());
-//                System.out.println("enable_or_disable:"
-//                    + "set book=" + bookComboBox.getValue()
+                System.out.println("enable_or_disable:"
+                    + "set book=" + bookComboBox.getValue()
 //                    + " GcDat=" + txtGcDatFilStr.getText()
 //                    + " GcVer=" + txtGcVer.getText()
-//                    + " DropBox=" + txtDropBox.getText());
+                      + " GcV2Cfg=" + chbGcV2Cfg.isSelected()
+                      + " GcV3Cfg=" + chbGcV3Cfg.isSelected()
+//                    + " DropBox=" + txtDropBox.getText()
+                );
             } else {
                 Book book = new Book(bookComboBox.getValue().toString(),
                                      txtGcDatFilStr.getText(),
                                      txtGcVer.getText(),
+                                     chbGcV2Cfg.isSelected(),
+                                     chbGcV3Cfg.isSelected(),
                                      txtDropBox.getText());
                 bookMap.put(bookComboBox.getValue(), book);
                 bookComboBoxData.add(bookComboBox.getValue().toString());
@@ -765,7 +1163,7 @@ public class BackupGnuCashController implements Initializable {
             //    " txtVisPswd.isVisible=" + txtVisPswd.isVisible());
             if (txtPswd.isVisible()) {
                 if (! txtPswd.isFocused()) {
-                    if (isFirstTime()) {
+                    if (firstTime) {
                         firstTime = false;
                         // When run from initialize(), controls are not yet ready to handle focus
                         //  so delay first execution of requestFocus until later
@@ -775,40 +1173,88 @@ public class BackupGnuCashController implements Initializable {
                         });
                     } else {
                         txtPswd.requestFocus();
-                        //System.out.println("enable_or_disable_buttons: txtPswd.requestFocus");
+                        System.out.println("enable_or_disable_buttons: txtPswd.requestFocus");
                     }
                 }
             } else {
                 if (! txtVisPswd.isFocused()) {
                     txtVisPswd.requestFocus();
-                    //System.out.println("enable_or_disable_buttons: txtVisPswd.requestFocus");
+                    System.out.println("enable_or_disable_buttons: txtVisPswd.requestFocus");
                 }
             }
         }
     }
 
     /**
-     * Backup GnuCash by using commands like
+     * Backup GnuCash
+     * 
+     * Note that 7z will backup all files and directories, including sub-folders,
+     *  when the arg is a directory with a "\" (Windows), or "/" (Linux) suffix
+     *
+     * Use commands like
      * Windows:
      * cmd.exe          NOT Used
      * /C               NOT Used
      * "E:\Program Files\7-Zip\7z.exe"
-     *   a
+     *   a -spf2
      *   E:\Data\Dropbox\GnuCash\GnuCashXXXX_%yyyymmddhhmm%_267.7z
      *   -p%pswd%
      *   E:\Data\GnuCash\267\XXXX\XXXX.gnucash
-     *   C:\\users\\[Name]\\.gnucash\\saved-reports-2.4
-     *   C:\\users\\[Name]\\.gnucash\\books\\XXXX.gnucash.gcm
+     *   V2
+     *    C:\Users\[Name]\.gnucash\
+     *    which includes (if used)
+     *     C:\Users\[Name]\.gnucash\saved-reports-2.4
+     *     C:\Users\[Name]\.gnucash\books\XXXX.gnucash.gcm
+     *    C:\Users\[Name]\.gtkrc-2.0
+     *    C:\Users\[Name]\.gtkrc-2.0.gnucash
+     *    C:\Program Files (x86)\gnucash\etc\gtk-2.0\gtkrc
+     *   V3
+     *    C:\Users\[Name]\AppData\Roaming\GnuCash\
+     *    which includes (if used)
+     *     C:\Users\[Name]\AppData\Roaming\GnuCash\saved-reports-2.4
+     *     C:\Users\[Name]\AppData\Roaming\GnuCash\books\[BookName].gnucash.gcm
+     *     C:\Users\[Name]\AppData\Roaming\GnuCash\gtk-3.0.css
+     *    %LOCALAPPDATA%\gtk-3.0\
+     *    which includes (if used)
+     *	   C:\Users\[Name]\AppData\Local\gtk-3.0\settings.ini
+     *     C:\Users\[Name]\AppData\Local\gtk-3.0\gtk.css
+     *    C:\Program Files (x86)\gnucash\etc\gnucash\environment.local
+     *
+     *   C:\Users\[Name]\.BupGc\GnuCashGSettings.reg
+     *   C:\Users\[Name]\aqbanking\
+     *
      * Linux:
      * bash         Needed to strip quotes around args      NOT Used
      * -c                                                   NOT Used
      * /usr/bin/7z
-     *   a
-     *   /home/[USER_NAME]/Dropbox\GnuCash\GnuCashXXXX_yyyymmddhhmm_267.7z
+     *   a -spf2
+     *   $HOME/Dropbox/GnuCash/GnuCashXXXX_yyyymmddhhmm_267.7z
      *   -p"pswd"
-     *   /home/[USER_NAME]/GnuCash/267/XXXX\XXXX.gnucash
-     *   /home/[USER_NAME]/.gnucash/saved-reports-2.4
-     *   /home/[USER_NAME]/.gnucash/books/XXXX.gnucash.gcm
+     *   $HOME/GnuCash/267/XXXX/XXXX.gnucash
+     *   V2
+     *    $HOME/.gnucash/
+     *     which includes (if used)
+     *      $HOME/.gnucash/saved-reports-2.4
+     *      $HOME/.gnucash/books/XXXX.gnucash.gcm
+     *    $HOME/.gtkrc-2.0      ### NOT on Linux
+     *    $HOME/.gtkrc-2.0.gnucash
+     *   V3
+     *    $HOME/.config/gnucash/
+     *     which includes (if used)
+     *      $HOME/.config/gnucash/gtk-3.0.css
+     *    $HOME/.config/gtk-3.0/
+     *     which includes (if used)
+     *      $HOME/.config/gtk-3.0/settings.ini
+     *      $HOME/.config/gtk-3.0/gtk-css
+     *      $HOME/.config/gtk-3.0/gtk-3.0.css
+     *    $HOME/.local/share/gnucash/
+     *     which includes
+     *      $HOME/.local/share/gnucash/saved-reports-2.[48]
+     *      $HOME/.local/share/gnucash/books/[BOOK].gnucash[_n].gcm
+     *    /etc/gnucash/environment.local
+     *
+     *   $HOME/.BupGc/gnucash.dconf
+     *   $HOME/.aqbanking/
      *
      * @author cgood
      * @param e
@@ -820,7 +1266,7 @@ public class BackupGnuCashController implements Initializable {
         /* NOTE: it does NOT seem possible to include redirection args like
             > or 2>&1 even if using cmd.exe /c
         */
-        final int cmdElements = 7;
+        final int cmdElements = 14;
         String strArchive;
         int exitVal = 0;
 
@@ -898,6 +1344,11 @@ public class BackupGnuCashController implements Initializable {
                 cmd[i++] = str7z;
             }
             cmd[i++] = "a";     // add to archive
+            cmd[i++] = "-spf2"; // -spf2 = use full paths without drive letter
+                                //  Needed to avoid "Duplicate filename on disk"
+                                //  error on Linux because of dirs
+                                //    ~/.config/gnucash
+                                //    ~/.local/share/gnucash
 
             // archive file string eg
             // Windows:
@@ -928,16 +1379,151 @@ public class BackupGnuCashController implements Initializable {
             // GC data file eg E:\Data\GnuCash\267\XXXX\XXXX.gnucash
             cmd[i++] = txtGcDatFilStr.getText();
 
-            // saved reports configuration file
-            //  eg C:\\users\[Name]\\.gnucash\saved-reports-2.4
-            cmd[i++] = HOME_DIR + FILE_SEPARATOR +
-                    ".gnucash" + FILE_SEPARATOR + "saved-reports-2.4";
+            // configuration dir(s)
+            //  eg Windows V2    $HOME\.gnucash\
+            //                   $HOME\.gtkrc-2.0
+            //                   $HOME\.gtkrc-2.0.gnucash
+            //                   [CE]:\Program Files (x86)\gnucash\etc\gtk-2.0\gtkrc
+            //             V3    $HOME\AppData\Roaming\GnuCash\
+            //                   %LOCALAPPDATA%\gtk-3.0\
+            //             V2+V3 C:\Users\[Name]\.BupGc\GnuCashGSettings.reg
+            //                   C:\Users\[Name]\aqbanking\
+            //     Linux   V2    $HOME/.gnucash/
+            //                   $HOME/.gtkrc-2.0.gnucash
+            //             V3    $HOME/.config/gnucash/
+            //                   $HOME/.config/gtk-3.0/
+            //                   $HOME/.local/share/gnucash/
+            //             V2+V3 $HOME/.BupGc/gnucash.dconf
+            //                   $HOME/.aqbanking/
 
-            // GC options
-            //  eg C:\\users\[Name]\.gnucash\books\XXXX.gnucash.gcm
-            cmd[i++] = HOME_DIR + FILE_SEPARATOR + ".gnucash" +
-                FILE_SEPARATOR + "books" + FILE_SEPARATOR +
-                fileName.filename() + "." + fileName.extension()+ ".gcm";
+            if (chbGcV2Cfg.isSelected()) {
+                // Windows  C:\Users\[Name]\.gnucash\
+                // Linux    $HOME/.gnucash/
+                cmd[i++] = HOME_DIR + FILE_SEPARATOR +
+                        ".gnucash" + FILE_SEPARATOR;
+
+                Path pathGcGtk;
+                if (OS_NAME.startsWith("Windows")) {
+                    // Backup $HOME/.gtkrc-2.0 if exists
+                    pathGcGtk = Paths.get(HOME_DIR + FILE_SEPARATOR + ".gtkrc-2.0");
+                    if (Files.isReadable(pathGcGtk)) {
+                        cmd[i++] = pathGcGtk.toString();
+                    } else {
+                        taLog.appendText("Info: Skip as does not exist: " +
+                                pathGcGtk.toString() + "\n");
+                    }
+                }
+
+                // Backup $HOME/.gtkrc-2.0.gnucash if exists
+                pathGcGtk = Paths.get(HOME_DIR + FILE_SEPARATOR + ".gtkrc-2.0.gnucash");
+                if (Files.isReadable(pathGcGtk)) {
+                    cmd[i++] = pathGcGtk.toString();
+                } else {
+                    taLog.appendText("Info: Skip as does not exist: " +
+                            pathGcGtk.toString() + "\n");
+                }
+
+                // [CE]:\Program Files (x86)\gnucash\etc\gtk-2.0\gtkrc if exists
+                String strPath = "\\Program Files (x86)\\gnucash\\etc\\gtk-2.0\\gtkrc";
+                pathGcGtk = Paths.get("C:" + strPath);
+                if (! Files.isReadable(pathGcGtk)) {
+                    pathGcGtk = Paths.get("E:" + strPath);
+                }
+                if (Files.isReadable(pathGcGtk)) {
+                    cmd[i++] = pathGcGtk.toString();
+                } else {
+                    taLog.appendText("Info: Skip as does not exist on C: or E: " +
+                            strPath + "\n");
+                }
+            }
+
+            if (chbGcV3Cfg.isSelected()) {
+                if (OS_NAME.startsWith("Windows")) {
+                    // C:\Users\[Name]\AppData\Roaming\GnuCash\
+                    cmd[i++] = System.getenv("APPDATA") + FILE_SEPARATOR +
+                            "GnuCash" + FILE_SEPARATOR;
+
+                    // %LOCALAPPDATA%\gtk-3.0\
+                    Path pathGcGtk = Paths.get(System.getenv("LOCALAPPDATA") +
+                            FILE_SEPARATOR + "gtk-3.0");
+                    if (Files.isReadable(pathGcGtk)) {
+                        cmd[i++] = pathGcGtk.toString() + FILE_SEPARATOR;
+                    } else {
+                        taLog.appendText("Info: Skip as does not exist: " +
+                                pathGcGtk.toString() + "\n");
+                    }
+                    // [CE]:\Program Files (x86)\gnucash\etc\gnucash\environment.local if exists
+                    String strPath = "\\Program Files (x86)\\gnucash\\etc\\gnucash\\environment.local";
+                    Path pathGcEnv = Paths.get("C:" + strPath);
+                    if (! Files.isReadable(pathGcEnv)) {
+                        pathGcEnv = Paths.get("E:" + strPath);
+                    }
+                    if (Files.isReadable(pathGcEnv)) {
+                        cmd[i++] = pathGcGtk.toString();
+                    }
+                } else { // Linux
+                    // $HOME/.config/gnucash/
+                    cmd[i++] = HOME_DIR + FILE_SEPARATOR + ".config" +
+                            FILE_SEPARATOR + "gnucash" + FILE_SEPARATOR;
+                    // $HOME/.config/gtk-3.0/
+                    Path pathGcGtk = Paths.get(HOME_DIR + FILE_SEPARATOR +
+                            ".config" + FILE_SEPARATOR + "gtk-3.0");
+                    if (Files.isReadable(pathGcGtk)) {
+                        cmd[i++] = pathGcGtk.toString() + FILE_SEPARATOR;
+                    } else {
+                        taLog.appendText("Info: Skip as does not exist: " +
+                                pathGcGtk.toString() + "\n");
+                    }
+                    // $HOME/.local/share/gnucash/
+                    Path pthGcLocal = Paths.get(HOME_DIR + FILE_SEPARATOR +
+                            ".local" + FILE_SEPARATOR + "share" +
+                            FILE_SEPARATOR + "gnucash");
+                    if (Files.exists(pthGcLocal)) {
+                        cmd[i++] = pthGcLocal.toString() + FILE_SEPARATOR;
+                    } else {
+                        taLog.appendText("Info: Skip as does not exist: " +
+                                pthGcLocal.toString() + "\n");
+                    }
+                    // /etc/gnucash/environment.local
+                    Path pthGcEnv = Paths.get(FILE_SEPARATOR +
+                        "etc" + FILE_SEPARATOR + "gnucash" +
+                        FILE_SEPARATOR + "environment.local");
+                    if (Files.exists(pthGcEnv)) {
+                        cmd[i++] = pthGcEnv.toString() + FILE_SEPARATOR;
+                    }
+                }
+            }
+
+            // Backup things common to GnuCash V2 + V3
+            if (OS_NAME.startsWith("Windows")) {
+                // Exported registry file: C:\Users\[Name]\.BupGc\GnuCashGSettings.reg
+                if (exportRegistry()) {
+                    cmd[i++] = OUT_REG_FILE;
+                }
+
+                // AqBanking : C:\Users\[Name]\aqbanking\
+                Path pathGcAq = Paths.get(HOME_DIR + FILE_SEPARATOR + "aqbanking");
+                if (Files.isReadable(pathGcAq)) {
+                    cmd[i++] = pathGcAq.toString() + FILE_SEPARATOR;
+                } else {
+                    taLog.appendText("Info: Skip as does not exist: " +
+                            pathGcAq.toString() + "\n");
+                }
+            } else {    // Linux
+                // Exported (dump) dconf settings file
+                if (exportDconf()) {
+                    cmd[i++] = OUT_DCONF_FILE;
+                }
+
+                // AqBanking: $HOME/.aqbanking/
+                Path pathGcAq = Paths.get(HOME_DIR + FILE_SEPARATOR + ".aqbanking");
+                if (Files.isReadable(pathGcAq)) {
+                    cmd[i++] = pathGcAq.toString() + FILE_SEPARATOR;
+                } else {
+                    taLog.appendText("Info: Skip as does not exist: " +
+                            pathGcAq.toString() + "\n");
+                }
+            }
 
             while (i < cmdElements) {
                 // stop rt.exec getting NullPointerException
@@ -1154,7 +1740,9 @@ public class BackupGnuCashController implements Initializable {
             Boolean boolDirOK = true;
             Path pthBupGc = Paths.get(ERR_FILE).getParent();
             if (Files.exists(pthBupGc)) {
+                loadingScreen = true;
                 getUserDefaults();
+                loadingScreen = false;
             } else {
                 try {
                     Files.createDirectory(pthBupGc);
@@ -1213,53 +1801,77 @@ public class BackupGnuCashController implements Initializable {
 //                System.out.println("defaultBookChb.selectedProperty has changed" +
 //                    " oldVal=" + wasSelected + " newVal=" + isNowSelected + " o=" + o);
 
-                final String oldDefault = (String) Book.getDefaultBook();
-                String newDefault;
-                bookSelectionTarget = (String) bookComboBox.getValue();
+                if (!loadingScreen) {
+                    final String oldDefault = (String) Book.getDefaultBook();
+                    String newDefault;
+                    bookSelectionTarget = (String) bookComboBox.getValue();
 
-                if (isNowSelected) {
-                    // IS ticked so this book will become the new default
-                    newDefault = bookSelectionTarget;
-                    Book.setDefaultBook((String) newDefault);
-//                    System.out.println("defaultBookChb.selectedProperty: IsTicked: new defaultBook=" + Book.getDefaultBook());
-                } else {
-                    // Current book is now NOT to be the default.
-                    // Current book is either the default book
-                    //   or a new book if default book name was changeed to a new book name
-                    //
-                    // If current book is not the default
-                    //   do nothing - default stays the same
-                    // else
-                    //   If 1st Book is the default
-                    //     set default to 2nd book
-                    //   else
-                    //     set default to 1st book
+                    if (isNowSelected) {
+                        // IS ticked so this book will become the new default
+                        newDefault = bookSelectionTarget;
+                        Book.setDefaultBook((String) newDefault);
+    //                    System.out.println("defaultBookChb.selectedProperty: IsTicked: new defaultBook=" + Book.getDefaultBook());
+                    } else {
+                        // Current book is now NOT to be the default.
+                        // Current book is either the default book
+                        //   or a new book if default book name was changed to a new book name
+                        //
+                        // If current book is not the default
+                        //   do nothing - default stays the same
+                        // else
+                        //   If 1st Book is the default
+                        //     set default to 2nd book
+                        //   else
+                        //     set default to 1st book
 
-                    // Following is not needed anymore now bookComboBox dropdown listView font
-                    //  is bound to defaultProp and cannot untick the default book
-                    //  as defaultChb is disabled when default book is currently selected.
-//                    if (bookSelectionTarget.equals(Book.getDefaultBook())) {
-//                        if (bookComboBoxData.get(0).equals(Book.getDefaultBook())) {
-//                            Book.setDefaultBook((String) bookComboBoxData.get(1));
-//                        } else {
-//                            Book.setDefaultBook((String) bookComboBoxData.get(0));
-//                        }
-//                    }
-                    newDefault = (String) Book.getDefaultBook();
-//                    System.out.println("defaultBookChb.selectedProperty: IsNotTicked: new defaultBook=" + Book.getDefaultBook());
+                        // Following is not needed anymore now bookComboBox dropdown listView font
+                        //  is bound to defaultProp and cannot untick the default book
+                        //  as defaultChb is disabled when default book is currently selected.
+    //                    if (bookSelectionTarget.equals(Book.getDefaultBook())) {
+    //                        if (bookComboBoxData.get(0).equals(Book.getDefaultBook())) {
+    //                            Book.setDefaultBook((String) bookComboBoxData.get(1));
+    //                        } else {
+    //                            Book.setDefaultBook((String) bookComboBoxData.get(0));
+    //                        }
+    //                    }
+    //                    newDefault = (String) Book.getDefaultBook();
+    //                    System.out.println("defaultBookChb.selectedProperty: IsNotTicked: new defaultBook=" + Book.getDefaultBook());
+                    }
+
+                    bookSelectionTarget = "";
+                    enable_or_disable_buttons();
                 }
-
-                bookSelectionTarget = "";
-                enable_or_disable_buttons();
             });
 
-            // handle changes to txtGcVer so that a new value
+            // handle changes to txtGcVer when it loses focus so that a new value
             //  is updated into Book.gcVer
             txtGcVer.focusedProperty().addListener((ObservableValue<? extends Boolean> o, Boolean wasFocused, Boolean isNowFocused) -> {
 //                System.out.println("txtGcVer.focusedProperty has changed" +
 //                    " oldVal=" + wasFocused + " newVal=" + isNowFocused + " o=" + o);
-                if (wasFocused) {
-                    // has just lost focus
+                if (!loadingScreen) {
+                    if (wasFocused) {
+                        // has just lost focus
+                        enable_or_disable_buttons();
+                    }
+                }
+            });
+
+            // handle changes to chbGcV2Cfg.selectedProperty
+            chbGcV2Cfg.selectedProperty().addListener((ObservableValue<? extends Boolean> o,
+                    Boolean oldVal, Boolean newVal) -> {
+                System.out.println("chbGcV2Cfg.selectedProperty has changed" +
+                    " oldVal=" + oldVal + " newVal=" + newVal + " o=" + o);
+                if (!loadingScreen) {
+                    enable_or_disable_buttons();
+                }
+            });
+
+            // handle changes to chbGcV3Cfg.selectedProperty
+            chbGcV3Cfg.selectedProperty().addListener((ObservableValue<? extends Boolean> o,
+                    Boolean oldVal, Boolean newVal) -> {
+                System.out.println("chbGcV3Cfg.selectedProperty has changed" +
+                    " oldVal=" + oldVal + " newVal=" + newVal + " o=" + o);
+                if (!loadingScreen) {
                     enable_or_disable_buttons();
                 }
             });
@@ -1280,17 +1892,21 @@ public class BackupGnuCashController implements Initializable {
 
                 // handle changes to txtGcDatFilStr
                 txtGcDatFilStr.focusedProperty().addListener((ObservableValue<? extends Boolean> o, Boolean oldVal, Boolean newVal) -> {
-                    if (oldVal == true) {
-                        // has just lost focus
-                        enable_or_disable_buttons();
+                    if (!loadingScreen) {
+                        if (oldVal == true) {
+                            // has just lost focus
+                            enable_or_disable_buttons();
+                        }
                     }
                 });
 
                 // handle changes to txtDropBox
                 txtDropBox.focusedProperty().addListener((ObservableValue<? extends Boolean> o, Boolean oldVal, Boolean newVal) -> {
-                    if (oldVal == true) {
-                        // has just lost focus
-                        enable_or_disable_buttons();
+                    if (!loadingScreen) {
+                        if (oldVal == true) {
+                            // has just lost focus
+                            enable_or_disable_buttons();
+                        }
                     }
                 });
 
@@ -1299,14 +1915,18 @@ public class BackupGnuCashController implements Initializable {
                     //System.out.println("txtPswd.textProperty has changed" +
                     //    " oldVal=" + oldVal + " newVal=" + newVal + " o=" + o);
 
-                    enable_or_disable_buttons();
+                    if (!loadingScreen) {
+                        enable_or_disable_buttons();
+                    }
                 });
 
                 // handle changes to chbShowPswd
                 chbShowPswd.selectedProperty().addListener(
                     (ObservableValue<? extends Boolean> ov,
-                        Boolean old_val, Boolean new_val) -> {
-                              enable_or_disable_buttons();
+                    Boolean old_val, Boolean new_val) -> {
+                    if (!loadingScreen) {
+                        enable_or_disable_buttons();
+                    }
                 });
 
                 // txtPswd    is a PasswordField    (masked)

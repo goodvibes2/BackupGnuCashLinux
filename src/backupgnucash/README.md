@@ -1,9 +1,9 @@
-#          BackupGnuCash 1.22 README.md file.
+#          BackupGnuCash 1.3.0 README.md file.
 
 This README.md is formatted for github markdown and is most easily read using a web browser
 to view https://github.com/goodvibes2/BackupGnuCashWin/blob/master/src/backupgnucash/README.md.
 
-The last known BackupGnuCash stable series is the 1.2x series.
+The last known BackupGnuCash stable series is the 1.3.x series.
 
 ## Table of Contents ##
 
@@ -50,7 +50,7 @@ Please read all of this document before asking for help.
 Features include
 
 - Available for both GNU/Linux and Microsoft Windows.
-BackupGnuCash has been tested in GNU/Linux Ubuntu 16.04 and Windows 10.
+BackupGnuCash has been tested in GNU/Linux Ubuntu 18.04 and Windows 10.
 GnuCash is also available for Mac OS/X and BackupGnuCash may work
 but this has not (yet) been tested.
 
@@ -59,39 +59,130 @@ After finishing a GnuCash session, you just start BackupGnuCash,
 select the saved GnuCash book configuration using the Book combobox,
 optionally select different directories, enter the password for encryption
 and click the Backup button. BackupGnuCash then encrypts the GnuCash data,
-saved reports and preferences files to a date/time stampded file name in
-the local 3rd party cloud storage directory.
+and optionally configuration files like saved reports and preferences files to a
+date/time stamped file name in the local 3rd party cloud storage directory.
 
-- All the usual GnuCash data files needed for system recovery are backed up.
-The 3 files backed up into each archive file are
-  1. the **main GnuCash data file** which usually has a .gnucash extension.
-     For example
-     ```
-       GNU/Linux              /home/[USER_NAME]/GnuCash/[BOOK].gnucash
-       Windows   C:\Users\[USER_NAME]\Documents\GnuCash\[BOOK].gnucash
-     ```
-  
-  2. the **saved reports file**, for example
-     ```
-       GNU/Linux   /home/[USER_NAME]/.gnucash/saved-reports-2.4
-       Windows  C:\Users\[USER_NAME]\.gnucash\saved-reports-2.4
-     ```
-     **Note** The 2.4 suffix is used for both GnuCash 2.4 and 2.6.
-     As of 29th May 2016 current stable version of GnuCash is
-     2.6.12.
-  
-  3. the **preferences file** (GnuCash metadata), usually
+- All the usual GnuCash data files needed for system recovery can be backed up.
+  The following folders and files are backed up (if they exist):
+  - The **main GnuCash data file** which usually has a .gnucash extension.
+    For example
+    ```
+      GNU/Linux              /home/[USERNAME]/GnuCash/[BOOK].gnucash
+      Windows   C:\Users\[USERNAME]\Documents\GnuCash\[BOOK].gnucash
+    ```
+
+  - The **GnuCash GSettings** such as saved window positions and other general settings.
+    In Windows, these settings are saved in the registry under
+    **HKCU\Software\GSettings\org\gnucash**.
+    This does **not** include online banking authorisation information.
+
+    BackupGnuCash exports these settings to text file
+    **C:\Users\[USERNAME]\.BupGC\GnuCashGSettings.reg**
+    and then backs up that file. The settings may be reloaded into the Windows
+    registry by using the Registry Editor to import the file.
+
+    In GNU/Linux, GnuCash 2.6 and later, GSettings uses **dconf** for storage.
+    BackupGnuCash uses the Linux **dconf** tool to dump GnuCash dconf entries to
+    text file **$HOME/.BupGc/gnucash.dconf** which is then backed up. E.g.
+    ```
+      dconf dump /org/gnucash/ > $HOME/.BupGc/gnucash.dconf
+    ```
+    The **dconf** tool can also be used to reload the GnuCash dconf entries.
+
+  - The **AqBanking** settings folder, for example
+    ```
+      GNU/Linux              $HOME/.aqbanking
+      Windows   C:\Users\[USERNAME]\aqbanking
+    ```
+
+  If **Configuration V2** is ticked:
+  - The **main GnuCash configuration** folder, for example
+    ```
+      GNU/Linux    /home/[USERNAME]/.gnucash
+      Windows   C:\Users\[USERNAME]\.gnucash
+    ```
+
+    This includes among others
+    1. The **saved reports file**, for example
        ```
-        GNU/Linux   /home/[USER_NAME]/.gnucash/books/[BOOK].gnucash.gcm
-        Windows C:\Users\[USER_NAME]\.gnucash\books\[BOOK].gnucash.gcm
+         GNU/Linux   /home/[USERNAME]/.gnucash/saved-reports-2.4
+         Windows  C:\Users\[USERNAME]\.gnucash\saved-reports-2.4
+       ```
+       **Note** Because the format of the saved reports file has not changed,
+       the 2.4 suffix is used for GnuCash 2.4 and 2.6.
+
+    2. The **preferences file** (GnuCash metadata), usually
+       ```
+         GNU/Linux   /home/[USERNAME]/.gnucash/books/[BOOK].gnucash.gcm
+         Windows  C:\Users\[USERNAME]\.gnucash\books\[BOOK].gnucash.gcm
        ```
 
-  These 3 files are all that is usually required when restoring or
-  moving to a new computer, apart from the GnuCash program itself
-  which can be downloaded from https://www.gnucash.org/download.
+  - The **GTK2 configuration files**, for example
+    ```
+      GNU/Linux   /home/[USERNAME]/.gtkrc-2.0.gnucash
+      Windows  C:\Users\[USERNAME]\.gtkrc-2.0.gnucash
+               C:\Users\[USERNAME]\.gtkrc-2.0
+               C:\Program Files (x86)\gnucash\etc\gtk-2.0\gtkrc
+    ```
+
+  If **Configuration V3** is ticked:
+  - The **main GnuCash configuration** folder, for example
+    ```
+      GNU/Linux    /home/[USERNAME]/.local/share/gnucash
+      Windows   C:\Users\[USERNAME]\AppData\Roaming\GnuCash\
+    ```
+
+    This includes among others
+    1. The **saved reports file**, for example
+       ```
+         GNU/Linux       /home/[USERNAME]/.local/share/gnucash/saved-reports-2.n
+         Windows   C:\Users\[USERNAME]\AppData\Roaming\GnuCash\saved-reports-2.n
+       ```
+       **Note** GnuCash 3 will use saved-reports-2.8 if it exists, otherwise
+                saved-reports-2.4 but always writes to saved-reports-2.8.
+
+
+    2. The **preferences file** (GnuCash metadata), usually
+       ```
+         GNU/Linux     /home/[USERNAME]/.local/share/gnucash/books/[BOOK].gnucash.gcm
+         Windows C:\Users\[USERNAME]\AppData\Roaming\GnuCash\books\[BOOK].gnucash.gcm
+       ```
+
+    3. The **GnuCash GTK3 configuration file**, for example
+       ```
+         GNU/Linux        /home/[USERNAME]/.config/gnucash/gtk-3.0.css
+       ```       
+       **Note** Windows gtk-3.0.css is:
+                C:\Users\[USERNAME]\AppData\Roaming\GnuCash\gtk-3.0.css
+
+
+  - The **Non-GnuCash specific GTK3 configuration folder**, for example
+    ```
+      GNU/Linux   /home/[USERNAME]/.config/gtk-3.0
+      Windows  C:\Users\[USERNAME]\AppData\Local\gtk-3.0
+    ```
+    which may include among others, the following files
+    ```
+      settings.ini
+      gtk.css
+      gtk-3.0.css
+    ```
+
+  - The file for local customisations to the environment
+    ```
+      GNU/Linux   /etc/gnucash/environment.local
+      Windows     [CE]:\Program Files (x86)\gnucash\etc\gnucash\environment.local
+
+  The 3 **most** important files when restoring or moving to a new computer, are
+  usually:
+  1. The main GnuCash data file
+  2. The saved reports file
+  3. The GnuCash metadata file.
+
+  The GnuCash program itself can be downloaded from https://www.gnucash.org/download.
 
   If you have customised GnuCash in any way that involves files other than
-  the 3 mentioned above, you also should ensure you either have backups
+  those mentioned above, you should ensure you either have backups
   of them or instructions for recreating your customisations.
   For example, you need to have a secure record of your online banking
   authorisation information so you can set up online banking again if you
@@ -99,7 +190,7 @@ The 3 files backed up into each archive file are
   the registry on Windows systems.
 
   Using BackupGnuCash is NOT a substitute for regular full system backups.
-  Most customisations, that are not held in the 3 files saved by this app,
+  Most customisations, that are not held in the files saved by this app,
   do not often change, so using BackupGnuCash say daily, along with say
   monthly full system backups, may be a reasonable GnuCash backup strategy.
 
@@ -169,20 +260,26 @@ The 3 files backed up into each archive file are
      versions are not totally backwards and forwards compatible,
      so this information may be useful if a restore is needed.
 
-     For example if you are using GnuCash 2.6.12, enter version
+     For example if you are using GnuCash 3.4, enter version
      ```
-       2612
+       34
      ```
-  4. **Location of the base archive directory**, for example
+  4. **Configuration V2** may optionally be ticked. If ticked, configuration
+     files used by GnuCash V2, in default locations, will be backed up.
+
+  5. **Configuration V3** may optionally be ticked. If ticked, configuration
+     files used by GnuCash V3, in default locations, will be backed up.
+
+  6. **Location of the base archive directory**, for example
      ```
-          GNU/Linux: /home/[USER_NAME]/Dropbox
-          Windows:   C:\Users\[USER_NAME]\Dropbox
+       GNU/Linux:    /home/[USERNAME]/Dropbox
+       Windows:   C:\Users\[USERNAME]\Dropbox
      ```
      The archive is created in a sub-directory of the base archive
      directory, called "GnuCash". For example
      ```
-           GNU/Linux /home/[USER_NAME]/Dropbox/GnuCash
-           Windows   C:\Users\[USER_NAME]\Dropbox\GnuCash
+       GNU/Linux    /home/[USERNAME]/Dropbox/GnuCash
+       Windows   C:\Users\[USERNAME]\Dropbox\GnuCash
      ```
      The GnuCash sub-directory must be manually created. If the GnuCash
      sub-directory of the archive directory does not exist, BackupGnuCash
@@ -191,20 +288,18 @@ The 3 files backed up into each archive file are
 
      As the book file name is part of the archive file name, so long as
      books have unique file names, archive files for multiple books may
-     be put in the same archive directory.
+     be put in the same archive directory without creating ambiguity.
 
   After valid entry of
-
     - the book name
     - the location and name of the main GnuCash data file
     - the location of the base archive directory
 
   the **Save Settings** button will be enabled, which when clicked,
-  will save the 3 above entries, and the Version field (optional),
-  for all books, in file
+  will save the BackupGnuCash configuration, in file
   ```
-    GNU/Linux: /home/[USER_NAME]/.BupGc/defaultProperties
-    Windows: C:\Users\USER_NAME]\.BupGc/defaultProperties
+    GNU/Linux: /home/[USERNAME]/.BupGc/defaultProperties
+    Windows: C:\Users\USERNAME]\.BupGc/defaultProperties
   ```
   **Note** the password is NOT saved and must be entered each time
   BackupGnuCash is started. The password must be at least 8 characters.
@@ -232,16 +327,16 @@ The 3 files backed up into each archive file are
 
   The archive file name will be created in the following format
   ```
-  GnuCash[BOOK]_yyyyMMddhhmmss[_Version].7z
+    GnuCash[BOOK]_yyyyMMddhhmmss[_Version].7z
   ```
   where
-    - [BOOK] is the data file name without the .gnucash extension
-    - yyyyMMddhhmmss is the current date and time 
-    - [_Version] is the optional GnuCash version number if entered.
+  - [BOOK] is the data file name without the .gnucash extension
+  - yyyyMMddhhmmss is the current date and time 
+  - [_Version] is the optional GnuCash version number if entered.
 
-- Each archive file will contain encrypted copies of the 3 data files.
-  The files will be encrypted, using the entered password, by free
-  software **7-Zip**, using AES-256 encryption.
+- Each archive file will contain encrypted copies of the selected data and
+  configuration files. The files will be encrypted, using the entered password,
+  by free software **7-Zip**, using AES-256 encryption.
 
   BackupGnuCash is not intended to be used to conceal illegal activities.
   The GnuCash data files are encrypted in the archive because, even though
@@ -258,11 +353,11 @@ The 3 files backed up into each archive file are
   ```
     C:\Program Files\7-Zip\7z.exe e archive.7z
   ```
-  extracts all files from archive archive.7z to the current folder.
+  extracts all files from archive archive.7z to the current folder. and
   ```
     C:\Program Files\7-Zip\7z.exe e archive.7z -oc:\soft *.gnucash
   ```
-  extracts files ending in **.gnucash** from archive archive.7z to c:\soft folder.
+  extracts files ending in **.gnucash** from archive archive.7z to **c:\soft** folder.
 
   **GNU/Linux** **Archive Manager** can be used to manage 7-Zip files if the
   **p7zip-full** package is installed.
@@ -270,9 +365,9 @@ The 3 files backed up into each archive file are
   ```
     7z e archive.7z
   ```
-  extracts all files from archive archive.7z to the current directory.
+  extracts all files from archive archive.7z to the current directory, and
   ```
-  7z e archive.7z -o/tmp "*.gnucash"
+    7z e archive.7z -o/tmp "*.gnucash"
   ```
   extracts files ending in .gnucash from archive archive.7z to /tmp directory.
 
@@ -308,8 +403,8 @@ select the required location.
 
 I suggest
 ```
-GNU/Linux              /home/[USER_NAME]/BackupGnuCash/BackupGnuCash.jar
-Windows   C:\Users\[USER_NAME]\Documents\BackupGnuCash\BackupGnuCash.jar
+GNU/Linux              /home/[USERNAME]/BackupGnuCash/BackupGnuCash.jar
+Windows   C:\Users\[USERNAME]\Documents\BackupGnuCash\BackupGnuCash.jar
 ```
 
 <a name="Dependencies"></a>
@@ -336,13 +431,13 @@ There are 2 ways to use this application
     https://github.com/goodvibes2/BackupGnuCashWin
   ```
     which is the project for Microsoft Windows using
-    Oracle Java 8, and netbeans IDE 8.0
+    Oracle Java 8, and netbeans IDE 8.2
 
   AND
   ```
     https://github.com/goodvibes2/BackupGnuCashLinux
   ```
-    which is the project for GNU/Linux Ubuntu 16.04 using
+    which is the project for GNU/Linux Ubuntu 18.04 using
     Java OpenJDK 8, OpenJFX, and netbeans IDE 8.1
 
 The java source files in both the above projects should be identical
@@ -364,8 +459,8 @@ https://github.com/goodvibes2/BackupGnuCashLinux/blob/master/dist/BackupGnuCash.
 
 I suggest
 ```
-GNU/Linux   /home/[USER_NAME]/BackupGnuCash/BackupGnuCash.jar
-Windows     C:\Users\[USER_NAME]\Documents\BackupGnuCash\BackupGnuCash.jar
+GNU/Linux   /home/[USERNAME]/BackupGnuCash/BackupGnuCash.jar
+Windows     C:\Users\[USERNAME]\Documents\BackupGnuCash\BackupGnuCash.jar
 ```
 
 ### Dependencies for using prebuilt backupGnuCash.jar ###
@@ -376,11 +471,11 @@ If you wish to download and use the prebuilt BackupGnuCash.jar from
 this github project, the following packages are required to be installed
 
 #### GNU/Linux ####
-These instructions are for Ubuntu 16.04 but should be similar for other
+These instructions are for Ubuntu 18.04 but should be similar for other
 Gnu/Linux flavours/versions.
 
 ##### Java #####
-BackupGnuCash uses Java version 8 (or later) and JavaFX.
+BackupGnuCash uses Java version 8 and JavaFX.
 These can be either the open **or** Oracle versions.
 
 See also [Known Issues](#KnownIssues).
@@ -392,8 +487,16 @@ installed). E.g
 ```
         sudo apt-get install openjfx
 ```
-Openjfx is available for Ubuntu from the wily (15.10) or xenial (16.04)
-**universe** repository, but not for previous Ubuntu versions.
+
+Ubuntu 18.04 includes java 8 and java 11.
+BackupGnuCash has not been ported to java 11 yet, so set the default java
+version to 8 using
+```
+  sudo update-alternatives --config java
+```
+
+Openjfx is available for Ubuntu from the wily (15.10), xenial (16.04) or
+bionic (18.04) **universe** repository, but not for previous Ubuntu versions.
 
 If openjfx is not available from your distribution's repositories, try
 https://wiki.openjdk.java.net/display/OpenJFX/Main
@@ -419,7 +522,7 @@ https://sourceforge.net/projects/sevenzip
 All the dependencies are available for Windows XP (I think) 7, 8, and 10.
 
 ##### Java #####
-Prebuilt openjfx is not available (as far as I can tell as at 31 May 2016)
+Prebuilt openjfx 8 is not available (as far as I can tell as at 31 May 2016)
 for Windows, so use Oracle Java 8 (which includes JavaFX) from
 http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html.
 
@@ -454,7 +557,7 @@ but not for
 ```
 E.g.
 ```
-    java -jar /home/[USER_NAME]/BackupGnuCash/BackupGnuCash.jar &
+    java -jar /home/[USERNAME]/BackupGnuCash/BackupGnuCash.jar &
 ```
 **Ubuntu** To set up a BackupGnuCash.desktop file so it can be started from the Unity
 Dash
@@ -463,14 +566,14 @@ create either (or both)
 ```
 /usr/share/applications/backup-gnucash.desktop
 or 
-/home/[USER_NAME]/.local/share/applications/backup-gnucash.desktop
+/home/[USERNAME]/.local/share/applications/backup-gnucash.desktop
 ```
 containing
 ```
 [Desktop Entry]
 Name=BackupGnuCash
 Comment=Backup GnuCash
-Exec=java -jar /home/[USER_NAME]/BackupGnuCash/BackupGnuCash.jar
+Exec=java -jar /home/[USERNAME]/BackupGnuCash/BackupGnuCash.jar
 Icon=gnucash-icon
 Terminal=false
 Type=Application
@@ -494,7 +597,7 @@ New, Shortcut,
 Browse to and select your BackupGnuCash.jar file
 or just type in the full filestring E.g
 ```
-C:\Users\[USER_NAME]\Documents\BackupGnuCash\BackupGnuCash.jar
+C:\Users\[USERNAME]\Documents\BackupGnuCash\BackupGnuCash.jar
 ```
 Name the shortcut **Backup GnuCash**.
 
@@ -513,25 +616,25 @@ BackupGnuCash is currently English only.
 
 **GNU/Linux**
 ```
-      Ubuntu 16.04 xenial
-      openjdk version 1.8.0_91
-      openjfx 8u60-b27-4
+      Ubuntu 18.04.2 bionic
+      openjdk version 1.8.0_191
+      openjfx 8u161-b12-1ubuntu2
       SceneBuilder (Gluon) 8.2.0 
       netbeans IDE 8.1
-      7-Zip 9.20 (p7zip-full)
+      7-Zip 16.02+dfsg-6 (p7zip-full)
 ```
 **Windows**
 ```
       Windows 10 64-bit
-      Oracle 8 jdk (1.8.0_91) which includes JavaFX
-      SceneBuilder (Oracle) 2.0
-      netbeans IDE 8.0
-      7-Zip 9.20
+      Oracle 8 jdk (1.8.0_191) which includes JavaFX
+      SceneBuilder (Gluon) 8.5.0
+      netbeans IDE 8.2
+      7-Zip 18.06
 ```
 If you wish to build the BackupGnuCash.jar from source, you'll need
 
 ### GNU/Linux ###
-**Note** These instructions are for Ubuntu 16.04 but should be similar for other
+**Note** These instructions are for Ubuntu 18.04 but should be similar for other
 Gnu/Linux flavours/versions.
 
 #### Java ####
@@ -543,6 +646,14 @@ You'll need the Java Development Kit (jdk) and OpenJFX. E.g.
 ```
 sudo apt-get install openjdk-8-jdk openjfx
 ```
+
+Ubuntu 18.04 includes java 8 and java 11.
+BackupGnuCash has not been ported to java 11 yet, so set the default java
+version to 8 using
+```
+  sudo update-alternatives --config java
+```
+
 OR
 ##### Oracle Java 8 jdk (includes JavaFX) #####
 Download and install Oracle Java SE 8 Development Kit from
@@ -631,12 +742,12 @@ on both the C: and E: drive.
 https://github.com/goodvibes2/BackupGnuCashWin
 ```
 which is the project for Microsoft Windows using
-Oracle Java 8, and netbeans IDE 8.0
+Oracle Java 8, and netbeans IDE 8.2
     and
 ```
 https://github.com/goodvibes2/BackupGnuCashLinux
 ```
-which is the project for GNU/Linux Ubuntu 16.04 using
+which is the project for GNU/Linux Ubuntu 18.04 using
 Java OpenJDK 8, OpenJFX, and netbeans IDE 8.1.
 
 The java source files in both the above projects should be identical
@@ -672,13 +783,13 @@ click on the green **Clone or download** button,
 click on **Download ZIP**.
 Extract all files from the zip, retaining directories, to
 ```
-  C:\Users\[USER_NAME]\Documents\NetBeansProjects
+  C:\Users\[USERNAME]\Documents\NetBeansProjects
 ```
 I suggest after extracting, rename folder
 ```
-  C:\Users\[USER_NAME]\Documents\NetBeansProjects\BackupGnuCashWin-master
+  C:\Users\[USERNAME]\Documents\NetBeansProjects\BackupGnuCashWin-master
   to
-  C:\Users\[USER_NAME]\Documents\NetBeansProjects\BackupGnuCash
+  C:\Users\[USERNAME]\Documents\NetBeansProjects\BackupGnuCash
 ```
     
 <a name="SupportedPlatforms"></a>
@@ -697,17 +808,21 @@ available.
 <a name="KnownIssues"></a>
 ## Known Issues ##
 
-1) From BackupGnuCash version 1.20 15 Jul 2016, Java 1.8.0_72 (8u72) or later is
+1) This program cannot reliably know if environment variables have been used to
+   alter the locations where configuration files are stored. Therefore this
+   program will only back up configuration files stored in default locations.
+
+2) From BackupGnuCash version 1.20 15 Jul 2016, Java 1.8.0_72 (8u72) or later is
    required due to bug https://bugs.openjdk.java.net/browse/JDK-8136838 as the
    value of ComboBox.getValue() was not correct in previous versions.
 
-   As of 15 Jul 2016, the current Java version on Windows is 1.8.0_92 and
-   on Ubuntu 16.04 is 1.8.0_91. 
-   Ubuntu 16.04 openjfx is version 8u60-b27-4 which works so long as when 
-   adding a new book, ENTER is pressed after typing a new book name into
+   As of 24 Feb 2019, the current Java version on Windows is 1.8.0_201, Ubuntu
+   16.04 is 1.8.0_191 and Ubuntu 18.04 is 1.8.0_191.
+   Ubuntu 16.04 openjfx is version 8u60-b27-4 (1.8.0_60) which works so long as
+   when adding a new book, ENTER is pressed after typing a new book name into
    the Book combobox. I.e. Press ENTER before leaving the combobox.
 
-2) Any new book added to the Book combobox is added to the end of the combobox
+3) Any new book added to the Book combobox is added to the end of the combobox
    dropdown list, rather than in it's sorted position. The book settings are
    sorted before they are saved to the defaultProperties file, so the combobox
    dropdown list will be sorted next time the program is started.

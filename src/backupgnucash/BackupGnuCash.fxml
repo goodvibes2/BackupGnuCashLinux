@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.Separator?>
@@ -19,16 +15,15 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<GridPane fx:id="grid" alignment="CENTER" hgap="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="800.0" vgap="10.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="backupgnucash.BackupGnuCashController">
+<GridPane fx:id="grid" alignment="CENTER" hgap="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="800.0" vgap="10.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="backupgnucash.BackupGnuCashController">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" maxWidth="184.0" minWidth="10.0" prefWidth="169.0" />
     <ColumnConstraints hgrow="SOMETIMES" maxWidth="471.0" minWidth="10.0" prefWidth="268.0" />
-      <ColumnConstraints hgrow="SOMETIMES" maxWidth="471.0" minWidth="10.0" prefWidth="160.0" />
-      <ColumnConstraints hgrow="SOMETIMES" maxWidth="471.0" minWidth="10.0" prefWidth="268.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="471.0" minWidth="10.0" prefWidth="180.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="471.0" minWidth="10.0" prefWidth="250.0" />
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="471.0" minWidth="10.0" prefWidth="160.0" />
   </columnConstraints>
   <rowConstraints>
-    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -60,77 +55,88 @@
             <Font name="Tahoma" size="24.0" />
          </font>
       </Text>
-      <Text fx:id="versionNo" strokeType="OUTSIDE" strokeWidth="0.0" text="V# 1.22 10 Mar 2018" textAlignment="RIGHT" GridPane.columnIndex="3" GridPane.columnSpan="2147483647" GridPane.halignment="RIGHT">
+      <Text fx:id="versionNo" strokeType="OUTSIDE" strokeWidth="0.0" text="V# 1.3.0 24 Feb 2019" textAlignment="RIGHT" GridPane.columnIndex="3" GridPane.columnSpan="2147483647" GridPane.halignment="RIGHT">
          <font>
             <Font size="12.0" />
          </font>
       </Text>
-      <Label fx:id="bookLbl" text="Book" GridPane.rowIndex="3">
+      <Label fx:id="bookLbl" text="Book" GridPane.rowIndex="2">
          <font>
             <Font size="14.0" />
          </font>
       </Label>
-      <ComboBox fx:id="bookComboBox" editable="true" onAction="#handleBookComboBoxOnAction" prefHeight="25.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-      <CheckBox fx:id="defaultBookChb" mnemonicParsing="false" text="Default" GridPane.columnIndex="2" GridPane.rowIndex="3">
-         <font>
-            <Font size="14.0" />
-         </font></CheckBox>
-      <Button fx:id="btnDelete" mnemonicParsing="false" onAction="#handleBtnActionDelete" prefHeight="25.0" prefWidth="87.0" text="Delete" GridPane.columnIndex="3" GridPane.rowIndex="3">
-         <font>
-            <Font size="14.0" />
-         </font></Button>
-      <Label fx:id="lblGCDatFilStr" text="GnuCash data" GridPane.rowIndex="5">
+      <ComboBox fx:id="bookComboBox" editable="true" onAction="#handleBookComboBoxOnAction" prefHeight="25.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+      <CheckBox fx:id="defaultBookChb" mnemonicParsing="false" text="Default" GridPane.columnIndex="2" GridPane.rowIndex="2">
          <font>
             <Font size="14.0" />
          </font>
-      </Label>
-      <TextField fx:id="txtGcDatFilStr" prefWidth="500.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="5" />
-      <Button fx:id="btnChooseGCDatFil" mnemonicParsing="false" onAction="#handleBtnActionChooseGCDat" prefHeight="28.0" prefWidth="80.0" text="Browse" GridPane.columnIndex="4" GridPane.rowIndex="5">
-         <font>
-            <Font size="14.0" />
-         </font></Button>
-      <Label fx:id="lblGCModDate" styleClass="labelNotBold" text="Modifed" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="6" />
-      <Label fx:id="lblGCVer" alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="110.0" text="Version" GridPane.rowIndex="7">
-         <font>
-            <Font size="14.0" />
-         </font>
-      </Label>
-      <TextField fx:id="txtGcVer" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-      <Label fx:id="lblDropBox" text="Dropbox" GridPane.rowIndex="9">
-         <font>
-            <Font size="14.0" />
-         </font>
-      </Label>
-      <TextField fx:id="txtDropBox" prefHeight="25.0" prefWidth="535.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="9" />
-      <Button fx:id="btnChooseDropBox" mnemonicParsing="false" onAction="#handleBtnActionChooseDropBox" prefHeight="28.0" prefWidth="80.0" text="Browse" GridPane.columnIndex="4" GridPane.rowIndex="9">
-         <font>
-            <Font size="14.0" />
-         </font></Button>
-      <Button fx:id="btnSaveSettings" mnemonicParsing="false" onAction="#handleBtnActionSaveSettings" prefHeight="25.0" prefWidth="200.0" text="Save Settings" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="10">
-         <font>
-            <Font size="14.0" />
-         </font></Button>
-      <Label fx:id="lblPswd" text="Password" GridPane.rowIndex="12">
-         <font>
-            <Font size="14.0" />
-         </font>
-      </Label>
-      <PasswordField fx:id="txtPswd" prefHeight="25.0" prefWidth="150.0" promptText="Password" GridPane.columnIndex="1" GridPane.rowIndex="12" />
-      <TextField fx:id="txtVisPswd" prefHeight="25.0" prefWidth="150.0" promptText="Password" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="12" />
-      <CheckBox fx:id="chbShowPswd" mnemonicParsing="false" text="Show" GridPane.columnIndex="2" GridPane.rowIndex="12" />
-      <Button fx:id="btnBupGC" mnemonicParsing="false" onAction="#handleBtnActionBupGC" prefHeight="25.0" prefWidth="200.0" text="Backup" GridPane.columnIndex="1" GridPane.rowIndex="13">
+      </CheckBox>
+      <Button fx:id="btnDelete" mnemonicParsing="false" onAction="#handleBtnActionDelete" prefHeight="25.0" prefWidth="87.0" text="Delete" GridPane.columnIndex="3" GridPane.rowIndex="2">
          <font>
             <Font size="14.0" />
          </font>
       </Button>
-      <Label fx:id="lblLog" alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="163.0" text="Log" textAlignment="RIGHT" GridPane.rowIndex="14">
+      <Button fx:id="btnHelp" mnemonicParsing="false" onAction="#handleBtnActionHelp" prefHeight="25.0" prefWidth="87.0" text="Help" GridPane.columnIndex="4" GridPane.rowIndex="2">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Button>
+      <Label fx:id="lblGCDatFilStr" text="GnuCash data" GridPane.rowIndex="4">
          <font>
             <Font size="14.0" />
          </font>
       </Label>
-      <TextArea fx:id="taLog" editable="false" prefHeight="277.0" prefWidth="650.0" wrapText="true" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="14" GridPane.rowSpan="8" />
-      <Separator fx:id="sep1" prefHeight="0.0" prefWidth="110.0" GridPane.columnSpan="5" GridPane.rowIndex="2" />
-      <Separator fx:id="sep2" prefHeight="0.0" prefWidth="110.0" GridPane.columnSpan="5" GridPane.rowIndex="8" />
-      <Separator fx:id="sep4" prefHeight="0.0" prefWidth="110.0" GridPane.columnSpan="5" GridPane.rowIndex="11" />
+      <TextField fx:id="txtGcDatFilStr" prefWidth="500.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="4" />
+      <Button fx:id="btnChooseGCDatFil" mnemonicParsing="false" onAction="#handleBtnActionChooseGCDat" prefHeight="28.0" prefWidth="80.0" text="Browse" GridPane.columnIndex="4" GridPane.rowIndex="4">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Button>
+      <Label fx:id="lblGCModDate" styleClass="labelNotBold" text="Modifed" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="5" />
+      <Label fx:id="lblGCVer" alignment="CENTER_RIGHT" prefHeight="17.0" prefWidth="110.0" text="Version" GridPane.rowIndex="6">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <TextField fx:id="txtGcVer" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+      <CheckBox fx:id="chbGcV2Cfg" mnemonicParsing="false" selected="true" text="V2" GridPane.columnIndex="3" GridPane.rowIndex="5" />
+      <CheckBox fx:id="chbGcV3Cfg" mnemonicParsing="false" selected="true" text="V3" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+      <Label fx:id="lblDropBox" text="Dropbox" GridPane.rowIndex="8">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <TextField fx:id="txtDropBox" prefHeight="25.0" prefWidth="535.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="8" />
+      <Button fx:id="btnChooseDropBox" mnemonicParsing="false" onAction="#handleBtnActionChooseDropBox" prefHeight="28.0" prefWidth="80.0" text="Browse" GridPane.columnIndex="4" GridPane.rowIndex="8">
+         <font>
+            <Font size="14.0" />
+         </font></Button>
+      <Button fx:id="btnSaveSettings" mnemonicParsing="false" onAction="#handleBtnActionSaveSettings" prefHeight="25.0" prefWidth="200.0" text="Save Settings" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="9">
+         <font>
+            <Font size="14.0" />
+         </font></Button>
+      <Label fx:id="lblPswd" text="Password" GridPane.rowIndex="11">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <PasswordField fx:id="txtPswd" prefHeight="25.0" prefWidth="150.0" promptText="Password" GridPane.columnIndex="1" GridPane.rowIndex="11" />
+      <TextField fx:id="txtVisPswd" prefHeight="25.0" prefWidth="150.0" promptText="Password" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="11" />
+      <CheckBox fx:id="chbShowPswd" mnemonicParsing="false" text="Show" GridPane.columnIndex="2" GridPane.rowIndex="11" />
+      <Button fx:id="btnBupGC" mnemonicParsing="false" onAction="#handleBtnActionBupGC" prefHeight="25.0" prefWidth="200.0" text="Backup" GridPane.columnIndex="1" GridPane.rowIndex="12">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Button>
+      <Label fx:id="lblLog" alignment="CENTER_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="163.0" text="Log" textAlignment="RIGHT" GridPane.rowIndex="13">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Label>
+      <TextArea fx:id="taLog" editable="false" prefHeight="277.0" prefWidth="650.0" wrapText="true" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="13" GridPane.rowSpan="8" />
+      <Separator fx:id="sep1" prefHeight="0.0" prefWidth="110.0" GridPane.columnSpan="5" GridPane.rowIndex="1" />
+      <Separator fx:id="sep2" prefHeight="0.0" prefWidth="110.0" GridPane.columnSpan="5" GridPane.rowIndex="7" />
+      <Separator fx:id="sep4" prefHeight="0.0" prefWidth="110.0" GridPane.columnSpan="5" GridPane.rowIndex="10" />
+      <Label fx:id="lblGcCfgData" alignment="CENTER_RIGHT" prefHeight="21.0" prefWidth="114.0" text="Configuration" textAlignment="RIGHT" wrapText="true" GridPane.columnIndex="2" GridPane.rowIndex="5" GridPane.rowSpan="2" />
    </children>
 </GridPane>
