@@ -32,6 +32,9 @@
                    3. Make ToolTips font bigger (in BackupGnuCash.fxml).
    27/05/2018 1.3.0 Mods for GnuCash 3, add options for backing up V2 + V3 
                     configuration and add Help button.
+   26/02/2019 1.3.1 Linux Java 8 Help button causes hang: wrap the call to any
+                    AWT APIs (Desktop.getDesktop().browse) in a runnable and
+                    submit it for execution via java.awt.EventQueue.invokeLater().
 
    See src/backupgnucash/ChangeLog.txt
 */
@@ -39,6 +42,7 @@
 package backupgnucash;
 
 import java.awt.Desktop;
+import java.awt.EventQueue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -223,6 +227,7 @@ public class BackupGnuCashController implements Initializable {
 
     private static final Font BOLD_FONT = Font.font("System", FontWeight.BOLD, 14);
     private static final Font NORMAL_FONT = Font.font("System", FontWeight.NORMAL, 14);
+    private final Desktop desktop = Desktop.getDesktop();
 
     @FXML
     public void handleBtnActionDelete(Event e) throws IOException {
@@ -251,16 +256,18 @@ public class BackupGnuCashController implements Initializable {
     @FXML
     public void handleBtnActionHelp(Event e) throws IOException {
 
-        if (Desktop.isDesktopSupported()) {
-            try {
-                Desktop.getDesktop().browse(new URI(HELP_URL));
-            } catch (URISyntaxException ex) {
-                Logger.getLogger(BackupGnuCashController.class.getName()).log(Level.SEVERE,
-                        null, ex);
-            }
+        if (desktop.isDesktopSupported()) {
+            EventQueue.invokeLater(() -> {
+                try {
+                    desktop.browse(new URI(HELP_URL));
+                } catch (IOException | URISyntaxException  ex) {
+                    Logger.getLogger(BackupGnuCashController.class.getName()).log(Level.SEVERE,
+                            null, ex);
+                }
+            });
         } else {
             taLog.appendText("Error: Desktop is not supported. Cannot open " +
-                    HELP_URL + "\n");
+                HELP_URL + "\n");
         }
     }
 

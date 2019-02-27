@@ -1,4 +1,4 @@
-#          BackupGnuCash 1.3.0 README.md file.
+#          BackupGnuCash 1.3.1 README.md file.
 
 This README.md is formatted for github markdown and is most easily read using a web browser
 to view https://github.com/goodvibes2/BackupGnuCashWin/blob/master/src/backupgnucash/README.md.
