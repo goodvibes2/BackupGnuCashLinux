@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Chris Good
+ * Copyright (C) 2019 Chris Good
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,13 +32,18 @@
                    3. Make ToolTips font bigger (in BackupGnuCash.fxml).
    27/05/2018 1.3.0 Mods for GnuCash 3, add options for backing up V2 + V3 
                     configuration and add Help button.
+   26/02/2019 1.3.1 Linux Java 8 Help button causes hang: wrap the call to any
+                    AWT APIs (Desktop.getDesktop().browse) in a runnable and
+                    submit it for execution via java.awt.EventQueue.invokeLater().
+   28/07/2019 2.0.0 Convert project to a modular java 11 project.
 
    See src/backupgnucash/ChangeLog.txt
 */
 
-package backupgnucash;
+package org.openjfx;
 
 import java.awt.Desktop;
+import java.awt.EventQueue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -62,12 +67,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+//import java.util.Set;
+import java.util.logging.*;
+//import java.util.logging.Level;
+//import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
+//import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -223,6 +229,7 @@ public class BackupGnuCashController implements Initializable {
 
     private static final Font BOLD_FONT = Font.font("System", FontWeight.BOLD, 14);
     private static final Font NORMAL_FONT = Font.font("System", FontWeight.NORMAL, 14);
+    private final Desktop desktop = Desktop.getDesktop();
 
     @FXML
     public void handleBtnActionDelete(Event e) throws IOException {
@@ -251,16 +258,18 @@ public class BackupGnuCashController implements Initializable {
     @FXML
     public void handleBtnActionHelp(Event e) throws IOException {
 
-        if (Desktop.isDesktopSupported()) {
-            try {
-                Desktop.getDesktop().browse(new URI(HELP_URL));
-            } catch (URISyntaxException ex) {
-                Logger.getLogger(BackupGnuCashController.class.getName()).log(Level.SEVERE,
-                        null, ex);
-            }
+        if (desktop.isDesktopSupported()) {
+            EventQueue.invokeLater(() -> {
+                try {
+                    desktop.browse(new URI(HELP_URL));
+                } catch (IOException | URISyntaxException  ex) {
+                    Logger.getLogger(BackupGnuCashController.class.getName())
+                         .log(Level.SEVERE, null, ex);
+                }
+            });
         } else {
             taLog.appendText("Error: Desktop is not supported. Cannot open " +
-                    HELP_URL + "\n");
+                HELP_URL + "\n");
         }
     }
 
@@ -629,11 +638,13 @@ public class BackupGnuCashController implements Initializable {
             //fosOut.close();  // done automatically when try with resources ends
         } catch (Throwable t)
         {
-            taLog.appendText("reg.exe FAILED");
+            taLog.appendText("reg.exe FAILED - StackTrace Logged");
             if (exitVal == 0) {
                 exitVal = 99;
             }
-            t.printStackTrace();
+            // NetBeans 11 suggests stack traces should be logged, not shown to users
+            //t.printStackTrace();
+            Logger.getLogger(BackupGnuCashController.class.getName()).log(Level.SEVERE, null, t);
         }
 
         // add stderr of reg.exe process to taLog
@@ -741,11 +752,12 @@ boolean exportDconf() {
             //fosOut.close();  // done automatically when try with resources ends
         } catch (Throwable t)
         {
-            taLog.appendText("dconf FAILED");
+            taLog.appendText("dconf FAILED - Stack Trace logged");
             if (exitVal == 0) {
                 exitVal = 99;
             }
-            t.printStackTrace();
+            //t.printStackTrace();
+            Logger.getLogger(BackupGnuCashController.class.getName()).log(Level.SEVERE, null, t);
         }
 
         // add stderr of dconf process to taLog
@@ -1578,7 +1590,8 @@ boolean exportDconf() {
                 // force exitVal to be non-zero when exception caught just in case
                 exitVal = 99;
             }
-            t.printStackTrace();
+            //t.printStackTrace();
+            Logger.getLogger(BackupGnuCashController.class.getName()).log(Level.SEVERE, null, t);
         }
 
         // add stderr of 7-zip process to taLog
