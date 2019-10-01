@@ -1,14 +1,21 @@
 #          BackupGnuCash 2.0.0 README.md file.
 
-This README.md is formatted for github markdown and is most easily read using a web browser
-to view https://github.com/goodvibes2/BackupGnuCashWin/blob/master/src/backupgnucash/README.md.
+This README.md is formatted for GitHub markdown and is most easily read using a web browser
+to view https://github.com/goodvibes2/BackupGnuCashWin/blob/master/src/backupgnucash/classes/org/openjfx/README.md.
 
-The last known BackupGnuCash stable series is the 2.0.x series.
+The last known BackupGnuCash stable series is
+
+|Java Version | BackupGnuCash Stable Series |
+|---          | ---                         |
+| 8           | 1.3.x                       |
+| 11          | 2.0.x                       |
 
 ## Table of Contents ##
 
   - [Overview](#Overview)
   - [Features](#Features)
+  - [Selecting BackupGnuCash Version](#BackupGnuCashVersion)
+  - [Selecting Precompiled BackupGnuCash or Compile Yourself](#PreCompiledOrCompile)
   - [Dependencies](#Dependencies)
   - [Running](#Running)
   - [Internationalization](#Internationalization)
@@ -32,7 +39,7 @@ been saved with a .gnucash file name extension (this has NOT been tested).
 BackupGnuCash should NOT be used with GnuCash data files saved in MySQL or
 PostgreSQL format as the data is spread over multiple files.
 
-This application is written in Java version 8 using JavaFX (or OpenJFX) for
+This application is written in Java using JavaFX (or OpenJFX) for
 the graphical user interface. Java versions before 8 cannot be used with this
 application as they do not support JavaFX.
 
@@ -50,7 +57,7 @@ Please read all of this document before asking for help.
 Features include
 
 - Available for both GNU/Linux and Microsoft Windows.
-BackupGnuCash has been tested in GNU/Linux Ubuntu 18.04 and Windows 10.
+BackupGnuCash has been tested in GNU/Linux Ubuntu 16.04 & 18.04 and Windows 10.
 GnuCash is also available for Mac OS/X and BackupGnuCash may work
 but this has not (yet) been tested.
 
@@ -150,11 +157,9 @@ date/time stamped file name in the local 3rd party cloud storage directory.
 
     3. The **GnuCash GTK3 configuration file**, for example
        ```
-         GNU/Linux        /home/[USERNAME]/.config/gnucash/gtk-3.0.css
-       ```       
-       **Note** Windows gtk-3.0.css is:
-                C:\Users\[USERNAME]\AppData\Roaming\GnuCash\gtk-3.0.css
-
+         GNU/Linux                 /home/[USERNAME]/.config/gnucash/gtk-3.0.css
+         Windows        C:\Users\[USERNAME]\AppData\Roaming\GnuCash\gtk-3.0.css
+       ```
 
   - The **Non-GnuCash specific GTK3 configuration folder**, for example
     ```
@@ -385,21 +390,136 @@ date/time stamped file name in the local 3rd party cloud storage directory.
 ### Home Page ###
 None
 
-### Precompiled binaries ###
+<a name="BackupGnuCashVersion"></a>
+## Selecting BackupGnuCash Version ##
 
+BackupGnuCash V1.x runs in Java 8.
+
+BackupGnuCash V2.x runs in Java 11.
+
+BackupGnuCash versions 1.x and 2.x have the same functionality. Currently (Sep
+2019), the only difference is the version of Java they run in. Note that as Java
+8 is no longer being developed, future BackupGnuCash enhancements may not be
+included in V1.x.
+
+**Definition**
+
+**JRE**
+Java Runtime Environment. Simplified - All the files needed to run a Java
+program.
+
+If you already have a Java 8 JRE installed, you can run BackupGnuCash V1.x.
+You should run BackupGnuCash V2.x if you do not have a Java 8 JRE already
+installed.
+
+**Windows**: You can download and install a Java 8 JRE if you wish. A JRE is not
+included with Windows.
+
+**GNU/Linux**
+  You may wish to use the JRE that is available in the repositories
+  for the version of GNU/Linux you are using. For example:
+
+**Ubuntu 16.04 (or Mint 18)**
+  Only has Java 8 available so if you already have Java 8 installed, you can
+  save some disk space by using the latest BackupGnuCash V1.x. You can still use
+  BackupGnuCash V2.x or later if you wish.
+
+**Ubuntu 18.04 (or Mint 19)**
+  Has both Java 8 and Java 11 and you can set the system to use either 8 or 11.
+  If you have another application that requires Java 8 and you have limited
+  disk space, then you could use BackupGnuCash V1.x, otherwise you should use
+  V2.x or later.
+
+<a name="DowngradeUbuntu18.04ToJava8"></a>
+## Downgrade Ubuntu 18.04 Java 11 to Java 8 ##
+
+If you already have a JRE installed, by default Ubuntu 18.04 will have updated
+it to Java 11. To set your Ubuntu 18.04 Java 11 system back to Java 8:
+  - Set the *java* command to Java 8
+  ```
+    sudo update-alternatives --config java
+  ```
+  and enter the line number for Java 8.
+  Check by running
+  ```
+    java -version
+  ```
+  - Downgrade the openjfx packages to Java 8
+  ```
+    sudo apt install openjfx=8u161-b12-1ubuntu2 \
+      libopenjfx-java=8u161-b12-1ubuntu2 \
+      libopenjfx-jni=8u161-b12-1ubuntu2
+  ```
+  - To stop the openjfx packages from being automatically updated to the latest
+  java 11 packages next update
+  ```
+    apt-mark hold openjfx libopenjfx-jni libopenjfx-java
+  ```
+  Note: holding packages at a particular release level may cause
+  incompatibilities with other packages so it is preferable not to do so.
+
+  To undo setting a Ubuntu 18.04 system to Java 8
+  - Set the *java* command to java 11
+  ```
+    sudo update-alternatives --config java
+  ```
+  and enter the line number for Java 11 (auto mode).
+  - Unhold the openjfx packages from being automatically updated to the
+  latest Java 11 packages next update
+  ```
+    apt-mark unhold openjfx libopenjfx-jni libopenjfx-java
+  ```
+  - Update the packages
+  ```
+    sudo apt-get update
+    sudo apt-get upgrade
+  ```
+
+<a name="PreCompiledOrCompile"></a>
+## Selecting to Use Precompiled BackupGnuCash or Compile Yourself ##
+
+There are 2 ways to use this application
+
+  1. Use the Precompiled Binaries (programs) attached to this GitHub project -
+     Download the prebuilt BackupGnuCash.jar (Java 8) or Runtime Image (Java
+     11).
+
+     This application comes with no warranty and you should think about the
+     security implications of using software downloaded from the internet. You
+     are trusting my good nature and the codebase from which this is built!
+     This code has not been security audited.
+
+  OR
+
+  2. Download the project source from GitHub, check the code for security and
+     build your own binary.
+
+### Precompiled Binaries ###
+
+#### BackupGnuCash V1.x for Java 8 ####
+
+To run **BackupGnuCash V1.x**, you need to have a Java 8 JRE already installed
+and you just need to download BackupGnuCash.jar from GitHub.
+
+**To download BackupGnuCash.jar**
+
+Copy and Paste one of the following URL's into a web browser
 ```
- https://github.com/goodvibes2/BackupGnuCashWin/blob/master/dist/BackupGnuCash.jar
- or
- https://github.com/goodvibes2/BackupGnuCashLinux/blob/master/dist/BackupGnuCash.jar
+  https://github.com/goodvibes2/BackupGnuCashWin/releases
+  or
+  https://github.com/goodvibes2/BackupGnuCashLinux/releases
 ```
-Being Java bytecode built from the same Java source files, either of the above
-should work in either GNU/Linux or Windows.
 
-To download BackupGnuCash.jar
+Being Java bytecode built from the same Java source files, BackupGnuCash.jar
+from either BackupGnuCashWin or BackupGnuCashLinux should work in both
+GNU/Linux and Windows.
 
-Paste either of the above URL's into a web browser,
-**Right** click on the **Raw** button, **Save target as**,
-select the required location.
+Find the latest V1.x Release, find the Assets section and click on
+BackupGnuCash.jar to download it.
+
+Usually it downloads to your *Downloads* folder.
+Move the downloaded BackupGnuCash.jar from your *Downloads* folder to a more
+appropriate folder.
 
 I suggest
 ```
@@ -407,75 +527,89 @@ GNU/Linux              /home/[USERNAME]/BackupGnuCash/BackupGnuCash.jar
 Windows   C:\Users\[USERNAME]\Documents\BackupGnuCash\BackupGnuCash.jar
 ```
 
+#### BackupGnuCash V2.x for Java 11 ####
+
+Java modular applications were introduced in Java 9. BackupGnuCash V2.x is a
+modular Java 11 application.
+
+It is **not** possible to run a modular java app from a .jar file even if you
+have an appropriate JRE already installed.
+
+To run BackupGnuCash V2.x, you do NOT need a Java Runtime Environment (JRE)
+already installed as the app is distributed as a Runtime Image which includes
+the required JRE and all the files needed.
+
+Disadvantages of a Java Runtime Image:
+  - Download is larger as it includes a JRE.
+  - Runtime Images work only on the platform (Windows or GNU/Linux in this case)
+  for which they are created.
+
+Advantages:
+  - Totally independent of any other installed JRE.
+
+**To download a BackupGnuCash V2.x Runtime Image (includes a Java 11 JRE)**
+
+Copy and Paste one of the following URL's into a web browser depending on your
+target platform (Windows or Linux)
+```
+  https://github.com/goodvibes2/BackupGnuCashWin/releases
+  or
+  https://github.com/goodvibes2/BackupGnuCashLinux/releases
+```
+
+Find the latest V2.x Release, then find the Assets section. To download the
+Runtime Image archive, click on
+```
+GNU/Linux       BackupGnuCash_rel2.n.n.tar.gz
+Windows         BackupGnuCash_rel2.n.n.zip
+```
+where 2.n.n is the required release.
+
+Usually a web browser downloads to your *Downloads* folder.
+Move the downloaded archive file from your *Downloads* folder to a more
+appropriate folder.
+
+I suggest the following folders
+```
+GNU/Linux              /home/[USERNAME]/BackupGnuCash
+Windows   C:\Users\[USERNAME]\Documents\BackupGnuCash
+```
+
+Unpack the Runtime Image
+
+**GNU/Linux**
+```
+cd /home/[USERNAME]/BackupGnuCash/
+tar zxf BackupGnuCash_rel2.n.n.tar.gz
+```
+
+**Windows**
+Use 7-Zip in a command prompt window to unpack all the files from the
+Runtime Image archive to the current directory
+```
+C:
+cd \Users\[USERNAME]\Documents\BackupGnuCash
+C:\Program Files\7-Zip\7z.exe e BackupGnuCash_rel2.n.n.zip
+```
+where 2.n.n is the required release.
+
 <a name="Dependencies"></a>
 ## Dependencies ##
 
-There are 2 ways to use this application
+### Dependencies for using prebuilt BackupGnuCash.jar V1.x in Java 8 ###
 
-  1. Download the prebuilt BackupGnuCash.jar from this project
-
-     This application comes with no warranty and you should think about the security
-     implications of using software downloaded from the internet. You are trusting
-     my good nature and the codebase from which this is built!
-     This code has not been security audited.
-
-  OR
-
-  2. Download the project source from github, check the code for security and
-     build your own copy of BackupGnuCash.jar.
-
-### To download the prebuilt BackupGnuCash.jar from github
-
-**Note** There are 2 versions of BackupGnuCash on github
-  ```
-    https://github.com/goodvibes2/BackupGnuCashWin
-  ```
-    which is the project for Microsoft Windows using
-    Oracle Java 8, and netbeans IDE 8.2
-
-  AND
-  ```
-    https://github.com/goodvibes2/BackupGnuCashLinux
-  ```
-    which is the project for GNU/Linux Ubuntu 18.04 using
-    Java OpenJDK 8, OpenJFX, and netbeans IDE 8.1
-
-The java source files in both the above projects should be identical
-and the dist/BackupGnuCash.jar files in both, being Java bytecode, should
-work in both GNU/Linux and Windows. The differences between these projects
-are only in the netbeans project files used for building the project.
-This is so as to make it easy to download (or clone) the project, set up the
-dependencies, and then be able to open the project in netbeans IDE, and
-build it without any further setup.
-
-Paste either of the following URL's into a web browser
-```
-https://github.com/goodvibes2/BackupGnuCashWin/blob/master/dist/BackupGnuCash.jar
- or
-https://github.com/goodvibes2/BackupGnuCashLinux/blob/master/dist/BackupGnuCash.jar
-```
-**Right** click on the **Raw** button, **Save target as**,
-  select the required location.
-
-I suggest
-```
-GNU/Linux   /home/[USERNAME]/BackupGnuCash/BackupGnuCash.jar
-Windows     C:\Users\[USERNAME]\Documents\BackupGnuCash\BackupGnuCash.jar
-```
-
-### Dependencies for using prebuilt backupGnuCash.jar ###
-
-(See [Building and Installing](#BuildingAndInstalling) below if you wish to build from source)
+(See [Building and Installing](#BuildingAndInstalling) below if you wish to
+build from source)
 
 If you wish to download and use the prebuilt BackupGnuCash.jar from
-this github project, the following packages are required to be installed
+this GitHub project, the following packages are required to be installed
 
 #### GNU/Linux ####
 These instructions are for Ubuntu 18.04 but should be similar for other
-Gnu/Linux flavours/versions.
+GNU/Linux flavours/versions.
 
 ##### Java #####
-BackupGnuCash uses Java version 8 and JavaFX.
+BackupGnuCash V1.x uses Java version 8 and JavaFX.
 These can be either the open **or** Oracle versions.
 
 See also [Known Issues](#KnownIssues).
@@ -485,15 +619,10 @@ Openjdk (http://openjdk.java.net)
 Install **openjfx** (which will also install **openjdk-8-jre** if not already
 installed). E.g
 ```
-        sudo apt-get install openjfx
+  sudo apt-get install openjfx
 ```
 
-Ubuntu 18.04 includes java 8 and java 11.
-BackupGnuCash has not been ported to java 11 yet, so set the default java
-version to 8 using
-```
-  sudo update-alternatives --config java
-```
+See [Downgrade Ubuntu 18.04 Java 11 to Java 8](#DowngradeUbuntu18.04ToJava8)
 
 Openjfx is available for Ubuntu from the wily (15.10), xenial (16.04) or
 bionic (18.04) **universe** repository, but not for previous Ubuntu versions.
@@ -511,7 +640,7 @@ http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.h
 
 ##### 7-Zip ######
 ```
-    sudo apt-get install p7zip-full
+  sudo apt-get install p7zip-full
 ```
 If p7zip-full is not available from your distribution's repositories, try
 http://www.7-zip.org/download.html
@@ -532,26 +661,75 @@ See also [Known Issues](#KnownIssues).
 Install from http://www.7-zip.org/download.html
 or https://sourceforge.net/projects/sevenzip.
 
-If running a 64-bit version of Windows, download and install the 64-bit
-version of 7-Zip as BackupGnuCash looks for either
+If your version of Windows is 32-bit, you will need to install 32-bit 7-Zip.
+
+If you're running a 64-bit version of Windows, download and install the 64-bit
+version of 7-Zip. BackupGnuCash looks for either
 ```
       C:\Program Files\7-Zip\7z.exe
       or
       E:\Program Files\7-Zip\7z.exe
-```
-but not for
-```
+      or
       C:\Program Files (x86)\7-Zip\7z.exe
       or
       E:\Program Files (x86)\7-Zip\7z.exe
 ```
 
+### Dependencies for using prebuilt BackupGnuCash V2.x Runtime Image (Java 11) ###
+
+(See [Building and Installing](#BuildingAndInstalling) below if you wish to
+build from source)
+
+If you wish to download and use the prebuilt BackupGnuCash V2.x Runtime Image
+from this GitHub project, the following packages need to be installed
+
+#### GNU/Linux ####
+
+##### Java #####
+
+As the Prebuilt BackupGnuCash Runtime Image V2.x includes a Java 11 RTE and
+openjfx, it is **not** neccessary to install java or openjfx separately.
+
+##### 7-Zip ######
+```
+    sudo apt-get install p7zip-full
+```
+If p7zip-full is not available from your distribution's repositories, try
+http://www.7-zip.org/download.html
+or
+https://sourceforge.net/projects/sevenzip
+
+#### Windows ####
+
+As the Prebuilt BackupGnuCash Runtime Image V2.x includes a Java 11 RTE and
+openjfx, it is **not** neccessary to install java or openjfx separately.
+
+##### 7-Zip #####
+Install from http://www.7-zip.org/download.html
+or https://sourceforge.net/projects/sevenzip.
+
+If your version of Windows is 32-bit, you will need to install 32-bit 7-Zip.
+
+If running a 64-bit version of Windows, download and install the 64-bit
+version of 7-Zip. BackupGnuCash looks for either
+```
+      C:\Program Files\7-Zip\7z.exe
+      or
+      E:\Program Files\7-Zip\7z.exe
+      or
+      C:\Program Files (x86)\7-Zip\7z.exe
+      or
+      E:\Program Files (x86)\7-Zip\7z.exe
+```
+
+
 <a name="Running"></a>
 ## Running ##
 
+### Running BackupGnuCash V1.x for Java 8 (BackupGnuCash.jar) ###
 
-### GNU/Linux ###
-  To run the project from the command line, type the following
+#### GNU/Linux ####
+  To run the app from the command line, type the following
 ```
     java -jar "[PathTo]/BackupGnuCash.jar" &
 ```
@@ -586,7 +764,7 @@ to ~/Desktop. Ensure it has execute permissions or you will get error
 **Untrusted Application Launcher**. E.g.
 ```
   cp /usr/share/applications/backup-gnucash.desktop ~/Desktop
-  chmod +x ~/Desktop
+  chmod +x ~/Desktop/backup-gnucash.desktop
 ```
 
 ### Windows ###
@@ -601,6 +779,64 @@ C:\Users\[USERNAME]\Documents\BackupGnuCash\BackupGnuCash.jar
 ```
 Name the shortcut **Backup GnuCash**.
 
+### Running BackupGnuCash V2.x for Java 11 (Runtime Image) ###
+
+#### GNU/Linux ####
+
+  To run the app from the command line, type the following
+```
+  ~/BackupGnuCash/BackupGnuCash_rel2.n.n/dist/jlink/BackupGnuCash/bin/BackupGnuCash &
+```
+where 2.n.n is the required release.
+E.g.
+```
+  ~/BackupGnuCash/BackupGnuCash_rel2.00/dist/jlink/BackupGnuCash/bin/BackupGnuCash &
+```
+**Ubuntu** To set up a BackupGnuCash.desktop file so it can be started from the Unity
+Dash or *Gnome Applications overview*
+
+create either (or both)
+```
+/usr/share/applications/backup-gnucash.desktop
+or 
+/home/[USERNAME]/.local/share/applications/backup-gnucash.desktop
+```
+containing
+```
+[Desktop Entry]
+Name=BackupGnuCash
+Comment=Backup GnuCash
+Exec=/home/[UserName]/BackupGnuCash/BackupGnuCash_rel2.n.n/dist/jlink/BackupGnuCash/bin/BackupGnuCash
+Icon=gnucash-icon
+Terminal=false
+Type=Application
+Categories=Office;Finance;
+```
+where 2.n.n is the required release.
+
+You can also create a shortcut on your **Desktop** by copying backup-gnucash.desktop
+to ~/Desktop. Ensure it has execute permissions or you will get error
+**Untrusted Application Launcher**. E.g.
+```
+  cp /usr/share/applications/backup-gnucash.desktop ~/Desktop
+  chmod +x ~/Desktop/backup-gnucash.desktop
+```
+
+#### Windows ####
+
+Create a shortcut on your desktop
+
+Right click on the desktop,
+New, Shortcut,
+Browse to and select your BackupGnuCash.bat file
+or just type in the full filestring E.g
+```
+C:\Users\[USERNAME]\Documents\BackupGnuCash\BackupGnuCash_rel2.n.n\dist\jlink\BackupGnuCash\bin\BackupGnuCash.bat
+```
+where 2.n.n is the required release.
+Name the shortcut **Backup GnuCash**.
+
+
 <a name="Internationalization"></a>
 ## Internationalization ##
 --------------------
@@ -612,15 +848,33 @@ BackupGnuCash is currently English only.
 ## Building and Installing ##
 ---------------------
 
+There are 2 versions of BackupGnuCash on GitHub
+- https://github.com/goodvibes2/BackupGnuCashWin
+  which is the NetBeans IDE 8.2 project for Microsoft Windows using
+  Oracle Java 8 (Includes JavaFX) or Oracle Java 11 and Gluon JavaFX 11.0.2
+- https://github.com/goodvibes2/BackupGnuCashLinux
+  which is the NetBeans IDE 8.1 project for GNU/Linux Ubuntu 18.04 using
+  Java OpenJDK 8 (and OpenJFX 8) or Oracle Java 11 and Gluon OpenJFX 11.0.2
+
+The java source files in both the above projects should be identical
+and the dist/BackupGnuCash.jar files in both, being Java bytecode, should
+work in both GNU/Linux and Windows. The differences between these projects
+are only in the NetBeans project files used for building the project.
+This is so as to make it easy to download (or clone) the project, set up the
+dependencies, and then be able to open the project in NetBeans IDE, and
+build it without any further setup.
+
 ### **Note** This project was developed and tested using ###
+
+**BackupGnuCash V1.x for Java 8**
 
 **GNU/Linux**
 ```
       Ubuntu 18.04.2 bionic
       openjdk version 1.8.0_191
       openjfx 8u161-b12-1ubuntu2
-      SceneBuilder (Gluon) 8.2.0 
-      netbeans IDE 8.1
+      SceneBuilder (Gluon) 8.2.0
+      NetBeans IDE 8.1
       7-Zip 16.02+dfsg-6 (p7zip-full)
 ```
 **Windows**
@@ -628,41 +882,64 @@ BackupGnuCash is currently English only.
       Windows 10 64-bit
       Oracle 8 jdk (1.8.0_191) which includes JavaFX
       SceneBuilder (Gluon) 8.5.0
-      netbeans IDE 8.2
+      NetBeans IDE 8.2
       7-Zip 18.06
 ```
-If you wish to build the BackupGnuCash.jar from source, you'll need
 
-### GNU/Linux ###
+**BackupGnuCash V2.x for Java 11**
+
+**GNU/Linux**
+```
+      Ubuntu 18.04.2 bionic
+      Oracle jdk 11.0.4
+      Gluon openjfx 11.0.2
+      Gluon jfx jmods 11.0.2
+      SceneBuilder (Gluon) 8.2.0
+      Apache NetBeans IDE 11.0
+      7-Zip 16.02+dfsg-6 (p7zip-full)
+```
+**Windows**
+
+```
+      Windows 10 64-bit
+      Oracle jdk (11.0.4)
+      Gluon openjfx 11.0.2
+      Gluon JavaFX jmods 11.0.2
+      SceneBuilder (Gluon) 8.5.0
+      Apache NetBeans IDE 11.0
+      7-Zip 18.06
+```
+
+### Build the V1.x BackupGnuCash.jar from source ###
+You will need
+
+#### GNU/Linux ####
 **Note** These instructions are for Ubuntu 18.04 but should be similar for other
-Gnu/Linux flavours/versions.
+GNU/Linux flavours/versions.
 
-#### Java ####
+##### Java #####
 BackupGnuCash uses Java version 8 and JavaFX (or OpenJFX).
 These can be EITHER the open OR Oracle versions.
 
-##### Openjdk #####
+###### Openjdk ######
 You'll need the Java Development Kit (jdk) and OpenJFX. E.g.
 ```
 sudo apt-get install openjdk-8-jdk openjfx
 ```
 
-Ubuntu 18.04 includes java 8 and java 11.
-BackupGnuCash has not been ported to java 11 yet, so set the default java
-version to 8 using
-```
-  sudo update-alternatives --config java
-```
+Ubuntu 18.04 includes Java 8 and Java 11.
+BackupGnuCash V1.x needs Java 8, so set the default Java version to 8. See
+[Downgrade Ubuntu 18.04 Java 11 to Java 8](#DowngradeUbuntu18.04ToJava8)
 
 OR
-##### Oracle Java 8 jdk (includes JavaFX) #####
+###### Oracle Java 8 jdk (includes JavaFX) ######
 Download and install Oracle Java SE 8 Development Kit from
 http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html.
 
-**Note** You can download a package which includes both the netbeans IDE and
+**Note** You can download a package which includes both the NetBeans IDE and
 the jdk from http://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html.
 
-#### SceneBuilder ####
+##### SceneBuilder #####
 SceneBuilder is the gui tool for modifying the user interface, details
 of which are held in BackupGnuCash.fxml.
 You only need to install SceneBuilder if you wish to modify the user
@@ -679,13 +956,15 @@ Install
 ```
 sudo dpkg -i scenebuilder-8.2.0_x64_64.deb
 ```
-#### Netbeans IDE
-If you haven't already installed netbeans as part of the Oracle combined
-jdk and netbeans
+
+##### NetBeans IDE #####
+If you haven't already installed NetBeans as part of the Oracle combined
+jdk and NetBeans
 ```
 sudo apt-get install netbeans
 ```
-#### 7-Zip ####
+
+##### 7-Zip #####
 ```
     sudo apt-get install p7zip-full
 ```
@@ -694,20 +973,20 @@ http://www.7-zip.org/download.html
 or
 https://sourceforge.net/projects/sevenzip/.
 
-### Windows ###
+#### Windows ####
 
-#### Java ####
-BackupGnuCash uses Java version 8 and JavaFX.
+##### Java #####
+BackupGnuCash V1.x uses Java version 8 and JavaFX.
     Openjdk and OpenJFX are NOT available for Windows, so use Oracle versions.
 
-##### Oracle Java 8 jdk (includes JavaFX) #####
+###### Oracle Java 8 jdk (includes JavaFX) ######
 Download and install Oracle Java SE 8 Development Kit from
 http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html.
 
-**Note** You can download a package which includes both the netbeans IDE and
+**Note** You can download a package which includes both the NetBeans IDE and
 the jdk from http://www.oracle.com/technetwork/java/javase/downloads/index-jsp-138363.html.
 
-#### SceneBuilder ####
+##### SceneBuilder #####
 SceneBuilder is the gui tool for modifying the user interface, details
 of which are held in BackupGnuCash.fxml.
 You only need to install SceneBuilder if you wish to modify the user
@@ -717,13 +996,13 @@ SceneBuilder is no longer available from Oracle.
 
 Download from http://gluonhq.com/open-source/scene-builder.
 
-#### Netbeans IDE ####
-If you haven't already installed netbeans as part of an Oracle combined
-jdk and netbeans
+##### NetBeans IDE #####
+If you haven't already installed NetBeans as part of an Oracle combined
+jdk and NetBeans
 
 Download and install from https://netbeans.org/downloads/.
 
-#### 7-Zip ####
+##### 7-Zip #####
 Install from http://www.7-zip.org/download.html
 or https://sourceforge.net/projects/sevenzip.
 
@@ -735,63 +1014,310 @@ or
 ```
 on both the C: and E: drive.
 
-#### To download the source files and netbeans project ####
+### Build the V2.x Runtime Image from source ###
 
-**Note** There are 2 versions of BackupGnuCash on github
+Follow the instructions https://openjfx.io/openjfx-docs/#introduction
+including the instructions for using JavaFX and NetBeans to build a
+Modular app from the IDE (NetBeans).
+
+**Note** The instructions on the above webpage are for Java 12 but BackupGnuCash
+V2.x was built for Java 11 as that was the version available in the Ubuntu 18.04
+repositories. Substitute Java 11 for Java 12 in the above webpage instructions.
+
+As a Modular Java 11 app is run from a Runtime Image (which includes its
+own JRE), and the Ubuntu jdk 11.0.4 is broken when used for a JavaFX Modular
+app (so we need to use the Oracle jdk), the Ubuntu jdk is actually irrelevant,
+and this app could probably have been built using Java 12 (or later).
+
+You will need
+
+#### GNU/Linux ####
+**Note** These instructions are for Ubuntu 18.04 but should be similar for other
+GNU/Linux flavours/versions.
+
+##### Java JDK #####
+BackupGnuCash V2.x uses Oracle Java jdk version 11
+
+Download jdk-11.0.4_linux-x64_bin.tar.gz from Oracle http://jdk.java.net/11/.
+The .gz contains base directory jdk-11.0.4.
+
+Extract (assuming the download is in ~/Downloads)
 ```
-https://github.com/goodvibes2/BackupGnuCashWin
+  cd $HOME
+  mkdir java
+  cd java
+  tar zxf ~/Downloads/jdk-11.0.4_linux-x64_bin.tar.gz
 ```
-which is the project for Microsoft Windows using
-Oracle Java 8, and netbeans IDE 8.2
-    and
+This will create $HOME/java/jdk-11.0.4/...
+
+###### openjfx ######
+Download JavaFX Linux SDK (openjfx-11.0.2_linux-x64_bin-sdk.zip)
+from https://gluonhq.com/products/javafx/. The .zip contains base directory
+javafx-sdk-11.0.2.
+
+Extract (assuming download is in ~/Downloads)
 ```
-https://github.com/goodvibes2/BackupGnuCashLinux
+cd $HOME/java
+unzip ~/Downloads/openjfx-11.0.2_linux-x64_bin-sdk.zip
 ```
-which is the project for GNU/Linux Ubuntu 18.04 using
-Java OpenJDK 8, OpenJFX, and netbeans IDE 8.1.
+This will create $HOME/java/javafx-sdk-11.0.2/...
 
-The java source files in both the above projects should be identical
-and the dist/BackupGnuCash.jar files in both should work in both GNU/Linux
-or Windows. The differences between these projects are only in the netbeans
-project files used for building the project. This is so as to make it easy
-to download (or clone) the project, set up the dependencies, and then be
-able to open the project in netbeans, and be able to build it without any
-further setup.
+##### jfx jmods #####
+Download JavaFX Linux jmods (openjfx-11.0.2_linux-x64_bin-jmods.zip)
+from https://gluonhq.com/products/javafx/. The .zip contains base directory
+javafx-jmods-11.0.2.
 
-There are 2 main ways to download the BackupGnuCash netbeans project from github
+Extract (assuming download is in ~/Downloads)
+```
+cd $HOME/java
+unzip ~/Downloads/openjfx-11.0.2_linux-x64_bin-jmods.zip
+```
+This will create $HOME/java/javafx-jmods-11.0.2/...
 
-1) If you already have a github account and git installed, you can clone
+##### SceneBuilder #####
+SceneBuilder is the gui tool for modifying the user interface, details
+of which are held in BackupGnuCash.fxml.
+You only need to install SceneBuilder if you wish to modify the user
+interface.
 
-   **GNU/Linux** At the command line
+SceneBuilder is NOT available in Ubuntu repositories, and is no longer
+    available from Oracle.
+
+Download the .deb from http://gluonhq.com/open-source/scene-builder
+
+E.g. Linux 64 bit: scenebuilder-8.2.0_x64_64.deb
+
+Install
+```
+sudo dpkg -i scenebuilder-8.2.0_x64_64.deb
+```
+
+##### NetBeans IDE #####
+Ubuntu 18.04 repositories contains NetBeans 10.0 but we need Apache NetNeans 11.
+```
+cd ~/java
+wget https://www-us.apache.org/dist/incubator/netbeans/incubating-netbeans/incubating-11.0/incubating-netbeans-11.0-bin.zip
+unzip incubating-netbeans-11.0-bin.zip
+sudo mv netbeans/ /opt/
+```
+The script to run NetBeans is /opt/netbeans/bin/netbeans
+
+Create NetBeans Desktop Launcher
+```
+  sudo nano /usr/share/applications/netbeans11.desktop
+```
+with contents
+```
+[Desktop Entry]
+Name=NetBeans 11 IDE
+Comment=NetBeans 11 IDE
+Type=Application
+Encoding=UTF-8
+Exec=/opt/netbeans/bin/netbeans
+Icon=/opt/netbeans/nb/netbeans.png
+Categories=GNOME;Application;Development;
+Terminal=false
+StartupNotify=true
+```
+
+##### 7-Zip #####
+```
+    sudo apt-get install p7zip-full
+```
+If p7zip-full is not available from your distribution's repositories, try
+http://www.7-zip.org/download.html
+or
+https://sourceforge.net/projects/sevenzip/.
+
+#### Windows ####
+
+##### Java #####
+BackupGnuCash V2.x uses Java JDK version 11 and openjfx.
+
+###### Oracle Java JDK 11 ######
+Openjdk 11 is only available from Oracle. You will need a free Oracle account
+to download the JDK.
+
+Download Oracle Java SE 11.0.4 Java Development Kit
+(jdk-11.0.4_windows-x64_bin.exe) from
+https://www.oracle.com/technetwork/java/javase/downloads/index.html.
+
+Double click on the downloaded .exe to install (by default) to
+C:\Program Files\Java\jdk-11.04.
+
+###### Openjfx ######
+Download JavaFX Windows SDK (openjfx-11.0.2_windows-x64_bin-sdk.zip)
+from https://gluonhq.com/products/javafx.
+The .zip contains base directory javafx-sdk-11.0.2.
+
+Use 7-Zip in a command prompt window to unpack all the files from the zip
+archive to the current directory
+```
+C:
+cd \Program Files\Java
+C:\Program Files\7-Zip\7z.exe e openjfx-11.0.2_windows-x64_bin-sdk.zip
+```
+This will create C:\Program Files\Java\javafx-sdk-11.0.2\\...
+
+###### jfx jmods ######
+Download JavaFX Windows jmods (openjfx-11.0.2_windows-x64_bin-jmods.zip)
+from https://gluonhq.com/products/javafx
+The .zip contains base directory javafx-jmods-11.0.2.
+
+Use 7-Zip in a command prompt window to unpack all the files from the zip
+archive to the current directory
+```
+C:
+cd \Program Files\Java
+C:\Program Files\7-Zip\7z.exe e openjfx-11.0.2_windows-x64_bin-jmods.zip
+```
+This will create C:\Program Files\Java\javafx-jmods-11.0.2\\...
+
+##### SceneBuilder #####
+SceneBuilder is the gui tool for modifying the user interface, details
+of which are held in BackupGnuCash.fxml.
+You only need to install SceneBuilder if you wish to modify the user
+interface.
+
+SceneBuilder is no longer available from Oracle.
+
+Download from http://gluonhq.com/open-source/scene-builder.
+
+##### NetBeans IDE #####
+Download NetBeans 11.0 LTS Binary (incubating-netbeans-11.0-bin.zip)
+from https://netbeans.apache.org/download/. The zip archive files all start with
+folder netbeans.
+
+As you may have permissions problems extracting directly to C:\Program Files,
+extract to your Downloads folder, then use File Explorer to create folder
+C:\Program Files\Netbeans11.0 and move the extracted *netbeans* folder to
+C:\Program Files\Netbeans11.0.
+
+Create a desktop shortcut pointing to
+  C:\Program Files\Netbeans11.0\netbeans\bin\netbeans64.exe
+
+##### 7-Zip #####
+Install from http://www.7-zip.org/download.html
+or https://sourceforge.net/projects/sevenzip.
+
+BackupGnuCash looks for
+```
+\Program Files\7-Zip\7z.exe
+or
+\Program Files (x86)\7-Zip\7z.exe
+```
+on both the C: and E: drive.
+
+#### To download the source files and NetBeans project ####
+
+There are 2 versions of BackupGnuCash on GitHub
+- https://github.com/goodvibes2/BackupGnuCashWin
+  which is the project for Microsoft Windows
+- https://github.com/goodvibes2/BackupGnuCashLinux
+  which is the project for GNU/Linux
+
+The java source files in both the above projects should be identical.
+The differences between these projects are only in the NetBeans project files
+used for building the project. This is so as to make it easy to download (or
+clone) the project, set up the dependencies, and then be able to open the
+project in NetBeans, and be able to build it without any further setup.
+
+There are 2 main ways to download the BackupGnuCash NetBeans project from GitHub
+
+1) **Clone** (if you already have a GitHub account and git installed)
+
+   ##### BackupGnuCash V1.x (Java 8) + BackupGnuCash V2.x (Java 11) #####
+     ###### GNU/Linux - At the command line
+     ```
+        cd
+        mkdir NetBeansProjects
+        cd NetBeansProjects
+        git clone https://github.com/goodvibes2/BackupGnuCashLinux BackupGnuCash
+     ```
+     ###### Windows - In a **git** shell
+     ```
+        cd ~/Documents
+        mdkir NetBeansProjects
+        cd NetBeansProjects
+        git clone https://github.com/goodvibes2/BackupGnuCashWin BackupGnuCash
+     ```
+
+   ##### BackupGnuCash V1.x Java 8 Extra Task #####
+   As the master branch has now been updated to Java 11, you need to reset back to
+   the last commit before Java 11 was merged into master. To create a new branch
+   (called say java8)
    ```
-      cd
-      mkdir NetBeansProjects
-      cd NetBeansProjects
-      git clone https://github.com/goodvibes2/BackupGnuCashLinux BackupGnuCash
+     cd BackupGnuCash
+   GNU/Linux:
+     git checkout -b java8 bdbb1501c24f6853a5bc46109c65612536a65b79
+   Windows:
+     git checkout -b java8 e3d5f4986b19febc59ddd14c5b432f649dc36b57
    ```
-   **Windows** In a **git** shell
-   ```
-      cd ~/Documents
-      mdkir NetBeansProjects
-      cd NetBeansProjects
-      git clone https://github.com/goodvibes2/BackupGnuCashWin BackupGnuCash
-   ```
+
 OR
 
-2) Open the required Linux or Windows URL from above in a web browser,
-click on the green **Clone or download** button,
-click on **Download ZIP**.
-Extract all files from the zip, retaining directories, to
+2) **Download the source code archive for the required release**
+
+   Copy and Paste one of the following URL's into a web browser depending on your
+   target platform (Windows or Linux)
+   ```
+     https://github.com/goodvibes2/BackupGnuCashWin/releases
+    or
+     https://github.com/goodvibes2/BackupGnuCashLinux/releases
+   ```
+
+   Find the latest V1.x or V2.x Release as required, then find the Assets section.
+   Click on
+   ```
+   GNU/Linux       Source code (tar.gz)
+   Windows         Source code (zip)
+   ```
+   This will download source code archive file
+   ```
+   GNU/Linux       BackupGnuCashLinux-v.n.n.tar.gz
+   Windows         BackupGnuCashWin-v.n.n.zip
+   ```
+   where v.n.n is the required release.
+
+   Usually a web browser downloads to your *Downloads* folder.
+   Move the downloaded archive file from your *Downloads* folder to a more
+   appropriate folder.
+
+   I suggest the following folders
+   ```
+     GNU/Linux              /home/[USERNAME]/NetBeansProjects
+     Windows   C:\Users\[USERNAME]\Documents\NetBeansProjects
+   ```
+
+   Unpack the source code and project files
+
+   **GNU/Linux**
+   ```
+     cd /home/[USERNAME]/NetBeansProjects
+     tar zxf BackupGnuCashLinux-v.n.n.tar.gz
+   ```
+   where v.n.n is the required release.
+
+   **Windows**
+   Use 7-Zip in a command prompt window to unpack all the files from the
+   source code archive to the current directory
+   ```
+   C:
+   cd \Users\[USERNAME]\Documents\NetBeansProjects
+   C:\Program Files\7-Zip\7z.exe e BackupGnuCashWin-v.n.n.zip
+   ```
+   where v.n.n is the required release.
+
+After extracting, before you open the project in NetBeans, you should edit the
+following files to ensure the paths match your project
 ```
-  C:\Users\[USERNAME]\Documents\NetBeansProjects
+  build.xml
+  nbproject/private/private.properties
+  nbproject/build-impl.xml
+  nbproject/project.properties
+  nbproject/project.xml
 ```
-I suggest after extracting, rename folder
-```
-  C:\Users\[USERNAME]\Documents\NetBeansProjects\BackupGnuCashWin-master
-  to
-  C:\Users\[USERNAME]\Documents\NetBeansProjects\BackupGnuCash
-```
-    
+
 <a name="SupportedPlatforms"></a>
 ## Supported Platforms ##
 
@@ -801,8 +1327,7 @@ BackupGnuCash is known to work with the following operating systems
 - Windows               -- x86
 
 BackupGnuCash can probably be made to work on any platform for which GnuCash
-does, so long as Java 8 (open or Oracle), JavaFX or openJFX, and 7-Zip are
-available.
+does so long as the [Dependencies](#Dependencies) are available.
 
 
 <a name="KnownIssues"></a>
@@ -816,8 +1341,8 @@ available.
    required due to bug https://bugs.openjdk.java.net/browse/JDK-8136838 as the
    value of ComboBox.getValue() was not correct in previous versions.
 
-   As of 24 Feb 2019, the current Java version on Windows is 1.8.0_201, Ubuntu
-   16.04 is 1.8.0_191 and Ubuntu 18.04 is 1.8.0_191.
+   As of 14 Sep 2019, the current Java version on Windows is 1.8.0_221, Ubuntu
+   16.04 is 1.8.0_222 and Ubuntu 18.04 is 1.8.0_222.
    Ubuntu 16.04 openjfx is version 8u60-b27-4 (1.8.0_60) which works so long as
    when adding a new book, ENTER is pressed after typing a new book name into
    the Book combobox. I.e. Press ENTER before leaving the combobox.
