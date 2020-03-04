@@ -356,11 +356,11 @@ date/time stamped file name in the local 3rd party cloud storage directory.
   decrypt the archive files if they need to be restored.
   Alternatively, use the 7-Zip command in a command prompt window, E.g.
   ```
-    C:\Program Files\7-Zip\7z.exe e archive.7z
+    "C:\Program Files\7-Zip\7z.exe" x archive.7z
   ```
   extracts all files from archive archive.7z to the current folder. and
   ```
-    C:\Program Files\7-Zip\7z.exe e archive.7z -oc:\soft *.gnucash
+    "C:\Program Files\7-Zip\7z.exe" x archive.7z -oc:\soft *.gnucash
   ```
   extracts files ending in **.gnucash** from archive archive.7z to **c:\soft** folder.
 
@@ -368,11 +368,11 @@ date/time stamped file name in the local 3rd party cloud storage directory.
   **p7zip-full** package is installed.
   Alternatively, use the 7-Zip command in a terminal window, E.g.
   ```
-    7z e archive.7z
+    7z x archive.7z
   ```
   extracts all files from archive archive.7z to the current directory, and
   ```
-    7z e archive.7z -o/tmp "*.gnucash"
+    7z x archive.7z -o/tmp "*.gnucash"
   ```
   extracts files ending in .gnucash from archive archive.7z to /tmp directory.
 
@@ -571,25 +571,27 @@ appropriate folder.
 
 I suggest the following folders
 ```
-GNU/Linux              /home/[USERNAME]/BackupGnuCash
-Windows   C:\Users\[USERNAME]\Documents\BackupGnuCash
+GNU/Linux              /home/[USERNAME]/BackupGnuCash/v2.n.n
+Windows   C:\Users\[USERNAME]\Documents\BackupGnuCash\v2.n.n
 ```
+where 2.n.n is the required release.
 
 Unpack the Runtime Image
 
 **GNU/Linux**
 ```
-cd /home/[USERNAME]/BackupGnuCash/
+cd /home/[USERNAME]/BackupGnuCash/v2.n.n
 tar zxf BackupGnuCash_rel2.n.n.tar.gz
 ```
+where 2.n.n is the required release.
 
 **Windows**
 Use 7-Zip in a command prompt window to unpack all the files from the
 Runtime Image archive to the current directory
 ```
 C:
-cd \Users\[USERNAME]\Documents\BackupGnuCash
-C:\Program Files\7-Zip\7z.exe e BackupGnuCash_rel2.n.n.zip
+cd \Users\[USERNAME]\Documents\BackupGnuCash\v2.n.n
+"C:\Program Files\7-Zip\7z.exe" x BackupGnuCash_rel2.n.n.zip
 ```
 where 2.n.n is the required release.
 
@@ -772,12 +774,13 @@ Create a shortcut on your desktop
 
 Right click on the desktop,
 New, Shortcut,
-Browse to and select your BackupGnuCash.jar file
-or just type in the full filestring E.g
+Type in the full command
 ```
-C:\Users\[USERNAME]\Documents\BackupGnuCash\BackupGnuCash.jar
+"C:\Program Files (x86)\Common Files\Oracle\Java\javapath\javaw.exe" -jar C:\Users\[USERNAME]\Documents\BackupGnuCash\BackupGnuCash.jar
 ```
 Name the shortcut **Backup GnuCash**.
+
+If you wish to see stdout or stderr for debugging, use **java.exe** instead of **javaw.exe** in the command above. Javaw.exe is intended for gui (window) applications (like BackupGnuCash) and does not show a console window.
 
 ### Running BackupGnuCash V2.x for Java 11 (Runtime Image) ###
 
@@ -785,12 +788,12 @@ Name the shortcut **Backup GnuCash**.
 
   To run the app from the command line, type the following
 ```
-  ~/BackupGnuCash/BackupGnuCash_rel2.n.n/dist/jlink/BackupGnuCash/bin/BackupGnuCash &
+  ~/BackupGnuCash/v2.n.n/dist/jlink/BackupGnuCashJ11/bin/BackupGnuCash &
 ```
 where 2.n.n is the required release.
 E.g.
 ```
-  ~/BackupGnuCash/BackupGnuCash_rel2.00/dist/jlink/BackupGnuCash/bin/BackupGnuCash &
+  ~/BackupGnuCash/v2.0.0/dist/jlink/BackupGnuCashJ11/bin/BackupGnuCash &
 ```
 **Ubuntu** To set up a BackupGnuCash.desktop file so it can be started from the Unity
 Dash or *Gnome Applications overview*
@@ -806,7 +809,7 @@ containing
 [Desktop Entry]
 Name=BackupGnuCash
 Comment=Backup GnuCash
-Exec=/home/[UserName]/BackupGnuCash/BackupGnuCash_rel2.n.n/dist/jlink/BackupGnuCash/bin/BackupGnuCash
+Exec=/home/[UserName]/BackupGnuCash/v2.n.n/dist/jlink/BackupGnuCashJ11/bin/BackupGnuCash
 Icon=gnucash-icon
 Terminal=false
 Type=Application
@@ -831,7 +834,7 @@ New, Shortcut,
 Browse to and select your BackupGnuCash.bat file
 or just type in the full filestring E.g
 ```
-C:\Users\[USERNAME]\Documents\BackupGnuCash\BackupGnuCash_rel2.n.n\dist\jlink\BackupGnuCash\bin\BackupGnuCash.bat
+C:\Users\[USERNAME]\Documents\BackupGnuCash\v2.n.n\dist\jlink\BackupGnuCashJ11\bin\BackupGnuCash.bat
 ```
 where 2.n.n is the required release.
 Name the shortcut **Backup GnuCash**.
@@ -1093,7 +1096,7 @@ sudo dpkg -i scenebuilder-8.2.0_x64_64.deb
 ```
 
 ##### NetBeans IDE #####
-Ubuntu 18.04 repositories contains NetBeans 10.0 but we need Apache NetNeans 11.
+Ubuntu 18.04 repositories contains NetBeans 10.0 but we need Apache NetBeans 11.
 ```
 cd ~/java
 wget https://www-us.apache.org/dist/incubator/netbeans/incubating-netbeans/incubating-11.0/incubating-netbeans-11.0-bin.zip
@@ -1154,8 +1157,8 @@ Use 7-Zip in a command prompt window to unpack all the files from the zip
 archive to the current directory
 ```
 C:
-cd \Program Files\Java
-C:\Program Files\7-Zip\7z.exe e openjfx-11.0.2_windows-x64_bin-sdk.zip
+cd "\Program Files\Java"
+"C:\Program Files\7-Zip\7z.exe" x openjfx-11.0.2_windows-x64_bin-sdk.zip
 ```
 This will create C:\Program Files\Java\javafx-sdk-11.0.2\\...
 
@@ -1168,8 +1171,8 @@ Use 7-Zip in a command prompt window to unpack all the files from the zip
 archive to the current directory
 ```
 C:
-cd \Program Files\Java
-C:\Program Files\7-Zip\7z.exe e openjfx-11.0.2_windows-x64_bin-jmods.zip
+cd "\Program Files\Java"
+"C:\Program Files\7-Zip\7z.exe" x openjfx-11.0.2_windows-x64_bin-jmods.zip
 ```
 This will create C:\Program Files\Java\javafx-jmods-11.0.2\\...
 
@@ -1304,7 +1307,7 @@ OR
    ```
    C:
    cd \Users\[USERNAME]\Documents\NetBeansProjects
-   C:\Program Files\7-Zip\7z.exe e BackupGnuCashWin-v.n.n.zip
+   "C:\Program Files\7-Zip\7z.exe" x BackupGnuCashWin-v.n.n.zip
    ```
    where v.n.n is the required release.
 
