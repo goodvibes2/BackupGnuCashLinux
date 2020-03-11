@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Chris Good
+ * Copyright (C) 2020 Chris Good
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,6 +62,7 @@ import java.text.Collator;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -207,6 +208,14 @@ public class BackupGnuCashController implements Initializable {
     private static final String OUT_DCONF_FILE = HOME_DIR + FILE_SEPARATOR +
             PROPERTIES_DIR + FILE_SEPARATOR + "gnucash.dconf";
     // Saved Settings
+    private static final String DEFAULT_PROP = "defaultBook";
+    private static final String BOOKNAME_PROP = "gcBook.";
+    private static final String DROPBOX_PROP = "dropBox.";
+    private static final String GCDATFIL_PROP = "gcDatFil.";
+    private static final String GCVER_PROP = "gcVer.";
+    private static final String GCV2CFG_PROP = "gcV2Cfg.";
+    private static final String GCV3CFG_PROP = "gcV3Cfg.";
+
     private static final String DEF_PROP = HOME_DIR + FILE_SEPARATOR +
             PROPERTIES_DIR + FILE_SEPARATOR + "defaultProperties";
     //  default properties
@@ -253,6 +262,30 @@ public class BackupGnuCashController implements Initializable {
                 enable_or_disable_buttons();
             }
         }
+        // Remove all entries for the deleted Book Name from defaultProps
+        // or they will still be saved to defaultProperties file next time the
+        // settings are saved. The deleted name may not have already been saved.
+
+        Enumeration<?> enumPropertyNames = defaultProps.propertyNames();
+        String suffix = "";
+        while(enumPropertyNames.hasMoreElements())
+	{
+            String key = (String) enumPropertyNames.nextElement();
+            if (key != null && key.contains(BOOKNAME_PROP)) {
+                if (defaultProps.getProperty(key).equals(tmpBook)) {
+                    suffix = key.substring(key.indexOf(".")+1);
+                    break;
+                }
+            }
+        }
+        if (!suffix.isEmpty()) {
+            defaultProps.remove(BOOKNAME_PROP + suffix);
+            defaultProps.remove(DROPBOX_PROP + suffix);
+            defaultProps.remove(GCDATFIL_PROP + suffix);
+            defaultProps.remove(GCVER_PROP + suffix);
+            defaultProps.remove(GCV2CFG_PROP + suffix);
+            defaultProps.remove(GCV3CFG_PROP + suffix);
+        }
     }
 
     @FXML
@@ -280,7 +313,7 @@ public class BackupGnuCashController implements Initializable {
         String suffix;
         String tmpBook;
 
-        defaultProps.setProperty("defaultBook", Book.getDefaultBook());
+        defaultProps.setProperty(DEFAULT_PROP, Book.getDefaultBook());
 
         // Until problem in Java 8u92 with adding items to ComboBox which uses SortedList is fixed,
         //  sort the books before saving
@@ -295,12 +328,12 @@ public class BackupGnuCashController implements Initializable {
             tmpBook = (String) itr.next();
             Book refBook = (Book) bookMap.get(tmpBook);
             suffix = String.valueOf(i++);
-            defaultProps.setProperty("gcBook." + suffix, refBook.getBookName());
-            defaultProps.setProperty("dropBox." + suffix, refBook.getDropBox());
-            defaultProps.setProperty("gcDatFil." + suffix, refBook.getGcDat());
-            defaultProps.setProperty("gcVer." + suffix, refBook.getGcVer());
-            defaultProps.setProperty("gcV2Cfg." + suffix, refBook.getGcV2Cfg().toString());
-            defaultProps.setProperty("gcV3Cfg." + suffix, refBook.getGcV3Cfg().toString()
+            defaultProps.setProperty(BOOKNAME_PROP + suffix, refBook.getBookName());
+            defaultProps.setProperty(DROPBOX_PROP + suffix, refBook.getDropBox());
+            defaultProps.setProperty(GCDATFIL_PROP + suffix, refBook.getGcDat());
+            defaultProps.setProperty(GCVER_PROP + suffix, refBook.getGcVer());
+            defaultProps.setProperty(GCV2CFG_PROP + suffix, refBook.getGcV2Cfg().toString());
+            defaultProps.setProperty(GCV3CFG_PROP + suffix, refBook.getGcV3Cfg().toString()
             );
         }
 
@@ -429,7 +462,7 @@ public class BackupGnuCashController implements Initializable {
             gcV3Cfg = true; // Did not exist in versions before 1.20
 
             // Check for existence of new property gcBook.0
-            tmpStr = defaultProps.getProperty("gcBook.0");
+            tmpStr = defaultProps.getProperty(BOOKNAME_PROP + "0");
             if ((tmpStr == null) || (tmpStr.isEmpty())) {
                 // new property does NOT exist so load old properties
                 tmpStr = defaultProps.getProperty("gcDatFil");
@@ -450,7 +483,7 @@ public class BackupGnuCashController implements Initializable {
                 FileName fileName = new FileName(gcDatFil, FILE_SEPARATOR, '.');
                 gcBook = fileName.filename();
             }
-            tmpStr = defaultProps.getProperty("defaultBook");
+            tmpStr = defaultProps.getProperty(DEFAULT_PROP);
             if (tmpStr == null || tmpStr.isEmpty()) {
                 tmpStr = gcBook;
             }
@@ -468,16 +501,16 @@ public class BackupGnuCashController implements Initializable {
             // load book settings into collection bookComboBoxData, then bookComboBox
             while (i < MAX_BOOKS) {
                 suffix = String.valueOf(i++);
-                tmpStr = defaultProps.getProperty("gcBook." + suffix);
+                tmpStr = defaultProps.getProperty(BOOKNAME_PROP + suffix);
                 if (tmpStr == null) {
                     break;
                 }
                 gcBook = tmpStr;
-                gcDatFil = defaultProps.getProperty("gcDatFil." + suffix);
-                gcVer = defaultProps.getProperty("gcVer." + suffix);
-                gcV2Cfg = Boolean.valueOf(defaultProps.getProperty("gcV2Cfg." + suffix));
-                gcV3Cfg = Boolean.valueOf(defaultProps.getProperty("gcV3Cfg." + suffix));
-                dropBox = defaultProps.getProperty("dropBox." + suffix);
+                gcDatFil = defaultProps.getProperty(GCDATFIL_PROP + suffix);
+                gcVer = defaultProps.getProperty(GCVER_PROP + suffix);
+                gcV2Cfg = Boolean.valueOf(defaultProps.getProperty(GCV2CFG_PROP + suffix));
+                gcV3Cfg = Boolean.valueOf(defaultProps.getProperty(GCV3CFG_PROP + suffix));
+                dropBox = defaultProps.getProperty(DROPBOX_PROP + suffix);
 
                 Book book = new Book(gcBook, gcDatFil, gcVer, gcV2Cfg, gcV3Cfg, dropBox);
                 bookComboBoxData.add(gcBook);

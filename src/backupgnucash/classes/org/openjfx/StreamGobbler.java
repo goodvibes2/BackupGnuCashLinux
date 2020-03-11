@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Chris Good
+ * Copyright (C) 2020 Chris Good
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,19 +30,19 @@ class StreamGobbler extends Thread
     InputStream is;
     String type;
     OutputStream os;
-    
+
     StreamGobbler(InputStream is, String type)
     {
         this(is, type, null);
     }
-    
+
     StreamGobbler(InputStream is, String type, OutputStream redirect)
     {
         this.is = is;
         this.type = type;
         this.os = redirect;
     }
-    
+
     @Override
     public void run()
     {
@@ -51,7 +51,7 @@ class StreamGobbler extends Thread
             PrintWriter pw = null;
             if (os != null)
                 pw = new PrintWriter(os);
-                
+
             InputStreamReader isr = new InputStreamReader(is);
             BufferedReader br = new BufferedReader(isr);
             //String line=null;

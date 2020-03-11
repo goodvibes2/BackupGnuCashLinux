@@ -1,5 +1,12 @@
 BackupGnuCash
 
+V# 2.0.1 11 Mar 2020 Chris Good
+
+    * Fix bug where a deleted Book was not also removed from defaultProps so
+      would reappear next time defaultProperties file was loaded.
+    * Update year to 2020 in copyright header of .java files.
+    * Remove build\built-jar.properties from git.
+
 V# 2.0.0 28 Jul 2019 Chris Good
 
     * Convert to Modular Java 11 project.
