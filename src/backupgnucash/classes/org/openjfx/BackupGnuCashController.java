@@ -30,7 +30,7 @@
    28/06/2016 1.20 1. Also check for Windows 7-Zip in Program Files (x86).
                    2. Allow configurations for multiple books.
                    3. Make ToolTips font bigger (in BackupGnuCash.fxml).
-   27/05/2018 1.3.0 Mods for GnuCash 3, add options for backing up V2 + V3 
+   27/05/2018 1.3.0 Mods for GnuCash 3, add options for backing up V2 + V3
                     configuration and add Help button.
    26/02/2019 1.3.1 Linux Java 8 Help button causes hang: wrap the call to any
                     AWT APIs (Desktop.getDesktop().browse) in a runnable and
@@ -317,7 +317,7 @@ public class BackupGnuCashController implements Initializable {
 
         // Until problem in Java 8u92 with adding items to ComboBox which uses SortedList is fixed,
         //  sort the books before saving
-  
+
 //      Set bookSet = bookMap.keySet();
 //      Iterator itr = bookSet.iterator();
 
@@ -728,7 +728,7 @@ boolean exportDconf() {
 
         // Use Linux dconf to dump GnuCash dconf entries to a text file which can be backed up
         // E.g dconf dump /org/gnucash/ > $HOME/.BupGc/gnucash.dconf
-        
+
         int exitVal = 0;
         String[] cmdExport = new String[3];
         String strDconf = "/usr/bin/dconf";
@@ -838,7 +838,7 @@ boolean exportDconf() {
             "To make another book the default:\n" +
             " First select the new default book, then tick this checkbox."
         ));
-        
+
         btnDelete.setTooltip(new Tooltip(
             "Delete:\nDelete settings for the current book.\n" +
             "The settings for the last remaining book and the default book cannot be deleted.\n" +
@@ -848,7 +848,7 @@ boolean exportDconf() {
         btnHelp.setTooltip(new Tooltip(
             "Help:\nOpen in the default web brower:\n" + HELP_URL
         ));
-        
+
         btnSaveSettings.setTooltip(new Tooltip(
             "Save Settings:\nSave settings for all books in\n" +
             DEF_PROP + "\n" + "The password is NOT saved."
@@ -1025,8 +1025,8 @@ boolean exportDconf() {
                             pathGcGcm.toString() + " is not readable or does not exist\n");
                     }
                 }
-                
-                if (chbGcV3Cfg.isSelected()) {      
+
+                if (chbGcV3Cfg.isSelected()) {
                     // GnuCash V3
                     // Chk Saved Reports file exists
                     // GnuCash V3 uses saved-reports-2.4 if no saved-reports-2.8 exists
@@ -1232,7 +1232,7 @@ boolean exportDconf() {
 
     /**
      * Backup GnuCash
-     * 
+     *
      * Note that 7z will backup all files and directories, including sub-folders,
      *  when the arg is a directory with a "\" (Windows), or "/" (Linux) suffix
      *
@@ -1922,7 +1922,7 @@ boolean exportDconf() {
                 }
             });
 
-            if (boolDirOK) {           
+            if (boolDirOK) {
                 if ((txtGcDatFilStr.getText() == null) || (txtGcDatFilStr.getText().isEmpty())) {
 //                    System.out.println("initialize(): txtGcDatFilStr.setText to " + getGcDatFil());
                     txtGcDatFilStr.setText(getGcDatFil());

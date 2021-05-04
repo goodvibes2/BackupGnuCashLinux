@@ -25,7 +25,7 @@ import javafx.beans.property.StringProperty;
  * @author cgood
  */
 public class Book {
-    
+
     /// instance variables
     private final SimpleStringProperty bookName;
     private final SimpleStringProperty gcDat;
@@ -33,7 +33,7 @@ public class Book {
     private final SimpleBooleanProperty gcV2Cfg;
     private final SimpleBooleanProperty gcV3Cfg;
     private final SimpleStringProperty dropBox;
-    
+
     // class variables
     private static String defaultBook = "";
     static final StringProperty defaultProp = new SimpleStringProperty();
@@ -48,7 +48,7 @@ public class Book {
         this.gcV3Cfg = new SimpleBooleanProperty(startGcV3Cfg);
         this.dropBox = new SimpleStringProperty(startDropBox);
     }
- 
+
     // class methods
     public static String getDefaultBook() {
         return defaultBook;
@@ -57,7 +57,7 @@ public class Book {
         Book.defaultBook = newDefaultBook;
         Book.defaultProp.set(newDefaultBook);
 }
-    
+
     // instance methods
     public String getBookName() {
         return bookName.get();
@@ -65,21 +65,21 @@ public class Book {
     public void setBookName(String bName) {
         bookName.set(bName);
     }
-        
+
     public String getGcDat() {
         return gcDat.get();
     }
     public void setGcDat(String gcDatStr) {
         gcDat.set(gcDatStr);
     }
-    
+
     public String getGcVer() {
         return gcVer.get();
     }
     public void setGcVer(String gcVerStr) {
         gcVer.set(gcVerStr);
     }
-    
+
     public Boolean getGcV2Cfg() {
 //        System.out.println("book.getGcV2Cfg returns: " + gcV2Cfg.get() );
         return gcV2Cfg.get();
@@ -102,5 +102,5 @@ public class Book {
     public void setDropBox(String dropBoxStr) {
         dropBox.set(dropBoxStr);
     }
-           
+
 }

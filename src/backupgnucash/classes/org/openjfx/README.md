@@ -204,7 +204,7 @@ date/time stamped file name in the local 3rd party cloud storage directory.
 
 - One-time setup of
   1. **Book**.
-     
+
      From BackupGnuCash version 1.20 on, the configuration details for
      up to 100 GnuCash books may defined and saved, and they will be
      automatically loaded when this app starts.
@@ -228,7 +228,7 @@ date/time stamped file name in the local 3rd party cloud storage directory.
      It is not necessary to press ENTER if using JavaFX or OpenJFX version 8u92,
      but it doesn't cause any problems.
      Use the Save Settings button to save the settings for all books.
-     
+
      To delete the book settings for the current book shown in the Book
      combobox, click the **Delete** button.
      The settings for the last remaining book and the default book cannot be
@@ -253,7 +253,7 @@ date/time stamped file name in the local 3rd party cloud storage directory.
      In this case, to go back to using the intended data file,  open
      the latest (or most correct) data file, then use
      'File', 'Save As' to save in the intended data file.
-     The next time GnuCash is opened, it will open the intended data 
+     The next time GnuCash is opened, it will open the intended data
      file because GnuCash, unless told to open a specific data file,
      will open the last data file it used.
 
@@ -336,7 +336,7 @@ date/time stamped file name in the local 3rd party cloud storage directory.
   ```
   where
   - [BOOK] is the data file name without the .gnucash extension
-  - yyyyMMddhhmmss is the current date and time 
+  - yyyyMMddhhmmss is the current date and time
   - [_Version] is the optional GnuCash version number if entered.
 
 - Each archive file will contain encrypted copies of the selected data and
@@ -745,7 +745,7 @@ Dash
 create either (or both)
 ```
 /usr/share/applications/backup-gnucash.desktop
-or 
+or
 /home/[USERNAME]/.local/share/applications/backup-gnucash.desktop
 ```
 containing
@@ -801,7 +801,7 @@ Dash or *Gnome Applications overview*
 create either (or both)
 ```
 /usr/share/applications/backup-gnucash.desktop
-or 
+or
 /home/[USERNAME]/.local/share/applications/backup-gnucash.desktop
 ```
 containing

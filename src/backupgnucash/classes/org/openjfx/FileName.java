@@ -22,7 +22,7 @@ package org.openjfx;
  *      path
  *      filename (without extension)
  *      extension
- * 
+ *
  * 16/05/2016 filename() : Return file name if no extensionSeparator to fix
  *              index out of bounds.
  *
@@ -30,7 +30,7 @@ package org.openjfx;
  */
 public class FileName {
     private final String fullPath;
-    private final char pathSeparator, 
+    private final char pathSeparator,
                  extensionSeparator;
 
     // constructor)
@@ -62,7 +62,7 @@ public class FileName {
         }
         int dot = fname.lastIndexOf(extensionSeparator);
         if (dot > -1) {
-            // there IS an extensionSeparator 
+            // there IS an extensionSeparator
             return fname.substring(0, dot);
         }
         return fname;

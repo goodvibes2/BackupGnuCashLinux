@@ -33,22 +33,22 @@ import javafx.stage.Stage;
 /**
  * This project backs up and encrypts GnuCash data to Dropbox using 7-Zip.
  * Platform: Windows 7/10
- * 
+ *
  * 30/04/2016 CRG Created
- * 
+ *
  * @author cgood
  */
 public class BackupGnuCash extends Application {
-    
+
     @Override
     public void start(Stage stage) throws Exception {
 
         Parent root = FXMLLoader.load(getClass().getResource("BackupGnuCash.fxml"));
         Scene scene = new Scene(root);
-        
-        stage.setTitle("Backup GnuCash");        
+
+        stage.setTitle("Backup GnuCash");
         stage.setScene(scene);
-        
+
         scene.getStylesheets().add(BackupGnuCash.class.getResource("BackupGnuCash.css").toExternalForm());
 
         stage.show();
@@ -60,5 +60,5 @@ public class BackupGnuCash extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-    
+
 }
