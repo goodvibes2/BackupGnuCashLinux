@@ -32,6 +32,7 @@ public class Book {
     private final SimpleStringProperty gcVer;
     private final SimpleBooleanProperty gcV2Cfg;
     private final SimpleBooleanProperty gcV3Cfg;
+    private final SimpleBooleanProperty gcFlatpak;
     private final SimpleStringProperty dropBox;
 
     // class variables
@@ -40,12 +41,14 @@ public class Book {
 
     // constructor
     public Book(String startBookName, String startGcDat, String startGcVer,
-            Boolean startGcV2Cfg, Boolean startGcV3Cfg, String startDropBox) {
+            Boolean startGcV2Cfg, Boolean startGcV3Cfg, Boolean startGcFlatpak,
+            String startDropBox) {
         this.bookName = new SimpleStringProperty(startBookName);
         this.gcDat = new SimpleStringProperty(startGcDat);
         this.gcVer = new SimpleStringProperty(startGcVer);
         this.gcV2Cfg = new SimpleBooleanProperty(startGcV2Cfg);
         this.gcV3Cfg = new SimpleBooleanProperty(startGcV3Cfg);
+        this.gcFlatpak = new SimpleBooleanProperty(startGcFlatpak);
         this.dropBox = new SimpleStringProperty(startDropBox);
     }
 
@@ -94,6 +97,13 @@ public class Book {
     }
     public void setGcV3Cfg(Boolean gcV3CfgBool) {
         gcV3Cfg.set(gcV3CfgBool);
+    }
+
+    public Boolean getGcFlatpak() {
+        return gcFlatpak.get();
+    }
+    public void setGcFlatpak(Boolean gcFlatpakBool) {
+        gcFlatpak.set(gcFlatpakBool);
     }
 
     public String getDropBox() {

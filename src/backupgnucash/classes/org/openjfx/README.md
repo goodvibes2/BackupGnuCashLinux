@@ -1,14 +1,15 @@
-#          BackupGnuCash 2.0.0 README.md file.
+#          BackupGnuCash 2.1.0 README.md file.
 
 This README.md is formatted for GitHub markdown and is most easily read using a web browser
-to view https://github.com/goodvibes2/BackupGnuCashWin/blob/master/src/backupgnucash/classes/org/openjfx/README.md.
+to view https://github.com/goodvibes2/BackupGnuCashWin/blob/master/src/backupgnucash/classes/org/openjfx/README.md
+or      https://github.com/goodvibes2/BackupGnuCashLinux/blob/master/src/backupgnucash/classes/org/openjfx/README.md.
 
 The last known BackupGnuCash stable series is
 
 |Java Version | BackupGnuCash Stable Series |
 |---          | ---                         |
 | 8           | 1.3.x                       |
-| 11          | 2.0.x                       |
+| 11          | 2.1.x                       |
 
 ## Table of Contents ##
 
@@ -36,14 +37,14 @@ BackupGnuCash is intended to be used with GnuCash data files that are stored in
 the default compressed XML format, or uncompressed XML format. It could probably
 be used to backup Sqlite format GnuCash data files if the Sqlite data file has
 been saved with a .gnucash file name extension (this has NOT been tested).
-BackupGnuCash should NOT be used with GnuCash data files saved in MySQL or
-PostgreSQL format as the data is spread over multiple files.
+BackupGnuCash does NOT support being used with GnuCash data files saved in MySQL
+or PostgreSQL format as the data is spread over multiple files.
 
 This application is written in Java using JavaFX (or OpenJFX) for
 the graphical user interface. Java versions before 8 cannot be used with this
 application as they do not support JavaFX.
 
-Free software **7-Zip** is used to perform the encryption.
+Free software **7-Zip** is used to create the encrypted backup files (archives).
 
 The BackupGnuCash project is _not_ part of the GnuCash project.
 
@@ -57,19 +58,42 @@ Please read all of this document before asking for help.
 Features include
 
 - Available for both GNU/Linux and Microsoft Windows.
-BackupGnuCash has been tested in GNU/Linux Ubuntu 16.04 & 18.04 and Windows 10.
-GnuCash is also available for Mac OS/X and BackupGnuCash may work
-but this has not (yet) been tested.
+
+  BackupGnuCash has been tested in GNU/Linux Ubuntu 16.04, 18.04 & 20.04 and
+  Windows 10.
+
+  GnuCash is also available for Mac OS/X and BackupGnuCash may work in Mac OS/X
+  but this has not (yet) been tested.
+
+- Flatpak support.
+  For GNU/Linux, BackupGnuCash can optionally backup configuration files for
+  both Flatpak and non-Flatpak GnuCash installations. BackupGnuCash is always
+  installed and run outside the GnuCash Flatpak sandbox. BackupGnuCash is not
+  itself available as a Flatpak application.
+
+  As GnuCash V2.x is very old and Flatpak makes it easy to run the latest Linux
+  GnuCash V3 or 4, BackupGnuCash does not support backing up configuration files
+  for GnuCash V2.0.x installed as a Flatpak.
+
+  It may be possible to run GNU/Linux GnuCash under Microsoft Windows using the
+  Windows Subsystem for Linux but this is **not** supported by BackupGnuCash.
 
 - An easy-to-use interface.
-After finishing a GnuCash session, you just start BackupGnuCash,
-select the saved GnuCash book configuration using the Book combobox,
-optionally select different directories, enter the password for encryption
-and click the Backup button. BackupGnuCash then encrypts the GnuCash data,
-and optionally configuration files like saved reports and preferences files to a
-date/time stamped file name in the local 3rd party cloud storage directory.
+  After finishing a GnuCash session, you just start BackupGnuCash,
+  select the saved GnuCash book configuration using the Book combobox,
+  optionally select different directories, enter the password for encryption
+  and click the Backup button. BackupGnuCash then copies the GnuCash data file,
+  and optionally configuration files like saved reports and preferences files,
+  to an encrypted, date/time stamped file name in the local 3rd party cloud
+  storage directory.
 
-- All the usual GnuCash data files needed for system recovery can be backed up.
+- All the usual GnuCash data files needed for system recovery are backed up.
+  The 3 **most** important files when restoring or moving to a new computer, are
+  usually:
+  1. The main GnuCash data file
+  2. The saved reports file
+  3. The GnuCash metadata file.
+
   The following folders and files are backed up (if they exist):
   - The **main GnuCash data file** which usually has a .gnucash extension.
     For example
@@ -84,7 +108,7 @@ date/time stamped file name in the local 3rd party cloud storage directory.
     This does **not** include online banking authorisation information.
 
     BackupGnuCash exports these settings to text file
-    **C:\Users\[USERNAME]\.BupGC\GnuCashGSettings.reg**
+    **C:\Users\\[USERNAME]\\.BupGC\GnuCashGSettings.reg**
     and then backs up that file. The settings may be reloaded into the Windows
     registry by using the Registry Editor to import the file.
 
@@ -94,7 +118,16 @@ date/time stamped file name in the local 3rd party cloud storage directory.
     ```
       dconf dump /org/gnucash/ > $HOME/.BupGc/gnucash.dconf
     ```
+
     The **dconf** tool can also be used to reload the GnuCash dconf entries.
+
+    GNU/Linux GnuCash installed as a Flatpak, is configured to access the host
+    dconf directly so BackupGnuCash doesn't need to do anything extra to backup
+    the GnuCash dconf settings.
+    See
+    ```
+      https://docs.flatpak.org/en/latest/sandbox-permissions.html#
+    ```
 
   - The **AqBanking** settings folder, for example
     ```
@@ -132,11 +165,11 @@ date/time stamped file name in the local 3rd party cloud storage directory.
                C:\Program Files (x86)\gnucash\etc\gtk-2.0\gtkrc
     ```
 
-  If **Configuration V3** is ticked:
+  If **Configuration V3+** is ticked AND **Flatpak** is not ticked:
   - The **main GnuCash configuration** folder, for example
     ```
-      GNU/Linux    /home/[USERNAME]/.local/share/gnucash
-      Windows   C:\Users\[USERNAME]\AppData\Roaming\GnuCash\
+      GNU/Linux         /home/[USERNAME]/.local/share/gnucash
+      Windows     C:\Users\[USERNAME]\AppData\Roaming\GnuCash\
     ```
 
     This includes among others
@@ -177,12 +210,65 @@ date/time stamped file name in the local 3rd party cloud storage directory.
     ```
       GNU/Linux   /etc/gnucash/environment.local
       Windows     [CE]:\Program Files (x86)\gnucash\etc\gnucash\environment.local
+    ```
 
-  The 3 **most** important files when restoring or moving to a new computer, are
-  usually:
-  1. The main GnuCash data file
-  2. The saved reports file
-  3. The GnuCash metadata file.
+  If **Configuration V3+** is ticked AND **Flatpak** is ticked:
+  - The **main GnuCash configuration** folder
+    ```
+      GNU/Linux       $HOME/.var/app/org.gnucash.GnuCash/data/gnucash
+    ```
+
+    This includes among others
+    1. The **saved reports file**
+       ```
+         GNU/Linux     /home/[USERNAME]/.var/app/org.gnucash.GnuCash/data/gnucash/saved-reports-2.n
+       ```
+       **Note** GnuCash 3 will use saved-reports-2.8 if it exists, otherwise
+                saved-reports-2.4 but always writes to saved-reports-2.8.
+
+    2. The **preferences file** (GnuCash metadata)
+       ```
+         GNU/Linux     /home/[USERNAME]/.var/app/org.gnucash.GnuCash/data/gnucash/books/[BOOK][_n].gnucash.gcm
+       ```
+
+  - The **Non-GnuCash specific configuration folder**
+    ```
+      /home/[USERNAME]/.var/app/org.gnucash.GnuCash/config
+    ```
+
+    which may include among others
+    1. The **GnuCash GTK3 configuration file**
+       ```
+         GNU/Linux   /home/[USERNAME]/.var/app/org.gnucash.GnuCash/config/gnucash/gtk-3.0.css
+       ```
+    2. The **Non-GnuCash specific GTK3 configuration files**
+       ```
+         GNU/Linux   /home/[USERNAME]/.var/app/org.gnucash.GnuCash/config/gtk-3.0/settings.ini
+         GNU/Linux   /home/[USERNAME]/.var/app/org.gnucash.GnuCash/config/gtk-3.0/gtk.css
+       ```
+
+  - The file for local customisations to the environment
+
+    Flatpaks can be installed in either user (Single user) or system (All users)
+    mode.
+
+    The Single user Flatpak install environment.local file is backed up if it exists.
+    Otherwise, the All users Flatpak install environment.local is backed up
+    if it exists.
+    Single user
+    ```
+      GNU/Linux   /home/[USERNAME]/.local/share/flatpak/app/org.gnucash.GnuCash/current/active/files/etc/gnucash/environment.local
+    ```
+    All users
+    ```
+      GNU/Linux   /var/lib/flatpak/app/org.gnucash.GnuCash/current/active/files/etc/gnucash/environment.local
+    ```
+
+    The above Flatpak paths for environment.local contain symbolic links.
+    As 7-Zip cannot handle symbolic links in .7z archives, the symbolic links
+    are changed to real directories before being passed to 7-Zip. If you restore
+    environment.local from a BackupGnuCash archive, you should check the actual
+    paths are still correct for the required Flatpak GnuCash installation.
 
   The GnuCash program itself can be downloaded from https://www.gnucash.org/download.
 
@@ -272,10 +358,17 @@ date/time stamped file name in the local 3rd party cloud storage directory.
   4. **Configuration V2** may optionally be ticked. If ticked, configuration
      files used by GnuCash V2, in default locations, will be backed up.
 
-  5. **Configuration V3** may optionally be ticked. If ticked, configuration
-     files used by GnuCash V3, in default locations, will be backed up.
+  5. **Configuration V3+** may optionally be ticked. If ticked, configuration
+     files used by GnuCash V3 and later, in default locations, will be backed up.
+     As of May 2021 latest stable GnuCash release 4.5, the configuration file
+     locations are the same in GnuCash V4 as V3.
 
-  6. **Location of the base archive directory**, for example
+  6. **Flatpak** may optionally be ticked. The Flatpak checkbox is disabled
+     when BackupGnuCash is running under Microsoft Windows. If ticked,
+     configuration files for a GNU/Linux Flatpak installation are backed up. If
+     unticked, the Non-Flatpak configuration file locations are used.
+
+  7. **Location of the base archive directory**, for example
      ```
        GNU/Linux:    /home/[USERNAME]/Dropbox
        Windows:   C:\Users\[USERNAME]\Dropbox
@@ -397,10 +490,11 @@ BackupGnuCash V1.x runs in Java 8.
 
 BackupGnuCash V2.x runs in Java 11.
 
-BackupGnuCash versions 1.x and 2.x have the same functionality. Currently (Sep
-2019), the only difference is the version of Java they run in. Note that as Java
-8 is no longer being developed, future BackupGnuCash enhancements may not be
-included in V1.x.
+BackupGnuCash versions 1.x and 2.x have the same functionality, with the
+exception that Gnu/Linux Flatpak support is only available from 2.1.0. Currently
+(May 2021), the only other difference is the version of Java they run in. Note
+that as Java 8 is no longer being developed, future BackupGnuCash enhancements
+may not be included in V1.x.
 
 **Definition**
 
@@ -408,9 +502,9 @@ included in V1.x.
 Java Runtime Environment. Simplified - All the files needed to run a Java
 program.
 
-If you already have a Java 8 JRE installed, you can run BackupGnuCash V1.x.
-You should run BackupGnuCash V2.x if you do not have a Java 8 JRE already
-installed.
+If you already have a Java 8 JRE + jfx 8 installed, you can run BackupGnuCash
+V1.x. You should run BackupGnuCash V2.x if you do not have a Java 8 JRE + jfx 8
+already installed.
 
 **Windows**: You can download and install a Java 8 JRE if you wish. A JRE is not
 included with Windows.
@@ -426,9 +520,17 @@ included with Windows.
 
 **Ubuntu 18.04 (or Mint 19)**
   Has both Java 8 and Java 11 and you can set the system to use either 8 or 11.
-  If you have another application that requires Java 8 and you have limited
-  disk space, then you could use BackupGnuCash V1.x, otherwise you should use
-  V2.x or later.
+  If you have another application that requires Java 8, and you have limited
+  disk space, and you don't need Flatpak support (starts in BackupGnuCash
+  V2.1.0), then you could use BackupGnuCash V1.x, otherwise you should use V2.x
+  or later.
+
+**Ubuntu 20.04 (or Mint 20)**
+  Has both Java 8 and Java 11 available but openjfx 8 is **not** available from
+  the Ubuntu repositories. It should be possible to install a 3rd party Java 8 +
+  jfx 8, see
+  https://stackoverflow.com/questions/61783369/install-openjdkopenjfx-8-on-ubuntu-20
+  but this is not tested, so use BackupGnuCash V2.x or later.
 
 <a name="DowngradeUbuntu18.04ToJava8"></a>
 ## Downgrade Ubuntu 18.04 Java 11 to Java 8 ##
@@ -498,8 +600,8 @@ There are 2 ways to use this application
 
 #### BackupGnuCash V1.x for Java 8 ####
 
-To run **BackupGnuCash V1.x**, you need to have a Java 8 JRE already installed
-and you just need to download BackupGnuCash.jar from GitHub.
+To run **BackupGnuCash V1.x**, you need to have a Java 8 JRE + jfx 8 already
+installed and you just need to download BackupGnuCash.jar from GitHub.
 
 **To download BackupGnuCash.jar**
 
@@ -537,7 +639,7 @@ have an appropriate JRE already installed.
 
 To run BackupGnuCash V2.x, you do NOT need a Java Runtime Environment (JRE)
 already installed as the app is distributed as a Runtime Image which includes
-the required JRE and all the files needed.
+the required JRE + jfx and all the files needed.
 
 Disadvantages of a Java Runtime Image:
   - Download is larger as it includes a JRE.
@@ -626,8 +728,9 @@ installed). E.g
 
 See [Downgrade Ubuntu 18.04 Java 11 to Java 8](#DowngradeUbuntu18.04ToJava8)
 
-Openjfx is available for Ubuntu from the wily (15.10), xenial (16.04) or
-bionic (18.04) **universe** repository, but not for previous Ubuntu versions.
+Openjfx 8 is available for Ubuntu from the wily (15.10), xenial (16.04) or
+bionic (18.04) **universe** repository, but not for previous or later
+(i.e. 20.04) Ubuntu versions.
 
 If openjfx is not available from your distribution's repositories, try
 https://wiki.openjdk.java.net/display/OpenJFX/Main
@@ -780,7 +883,9 @@ Type in the full command
 ```
 Name the shortcut **Backup GnuCash**.
 
-If you wish to see stdout or stderr for debugging, use **java.exe** instead of **javaw.exe** in the command above. Javaw.exe is intended for gui (window) applications (like BackupGnuCash) and does not show a console window.
+If you wish to see stdout or stderr for debugging, use **java.exe** instead of
+**javaw.exe** in the command above. Javaw.exe is intended for gui (window)
+applications (like BackupGnuCash) and does not show a console window.
 
 ### Running BackupGnuCash V2.x for Java 11 (Runtime Image) ###
 
@@ -795,8 +900,8 @@ E.g.
 ```
   ~/BackupGnuCash/v2.0.0/dist/jlink/BackupGnuCashJ11/bin/BackupGnuCash &
 ```
-**Ubuntu** To set up a BackupGnuCash.desktop file so it can be started from the Unity
-Dash or *Gnome Applications overview*
+**Ubuntu** To set up a BackupGnuCash.desktop file so it can be started from the
+Unity Dash or *Gnome Applications overview*
 
 create either (or both)
 ```
@@ -853,11 +958,9 @@ BackupGnuCash is currently English only.
 
 There are 2 versions of BackupGnuCash on GitHub
 - https://github.com/goodvibes2/BackupGnuCashWin
-  which is the NetBeans IDE 8.2 project for Microsoft Windows using
-  Oracle Java 8 (Includes JavaFX) or Oracle Java 11 and Gluon JavaFX 11.0.2
+  which is the NetBeans IDE project for Microsoft Windows
 - https://github.com/goodvibes2/BackupGnuCashLinux
-  which is the NetBeans IDE 8.1 project for GNU/Linux Ubuntu 18.04 using
-  Java OpenJDK 8 (and OpenJFX 8) or Oracle Java 11 and Gluon OpenJFX 11.0.2
+  which is the NetBeans IDE project for GNU/Linux
 
 The java source files in both the above projects should be identical
 and the dist/BackupGnuCash.jar files in both, being Java bytecode, should
@@ -889,7 +992,7 @@ build it without any further setup.
       7-Zip 18.06
 ```
 
-**BackupGnuCash V2.x for Java 11**
+**BackupGnuCash V2.0.x for Java 11**
 
 **GNU/Linux**
 ```
@@ -913,6 +1016,30 @@ build it without any further setup.
       7-Zip 18.06
 ```
 
+**BackupGnuCash V2.1.x for Java 11**
+
+**GNU/Linux**
+```
+      Ubuntu 20.04.2 focal
+      Oracle jdk 11.0.9
+      Gluon openjfx 11.0.2
+      Gluon jfx jmods 11.0.2
+      SceneBuilder (Gluon) 8.2.0
+      Apache NetBeans IDE 11.0
+      7-Zip 16.02+dfsg-7build1 (p7zip-full)
+```
+**Windows**
+
+```
+      Windows 10 64-bit
+      Oracle jdk (11.0.4)
+      Gluon openjfx 11.0.2
+      Gluon JavaFX jmods 11.0.2
+      SceneBuilder (Gluon) 8.5.0
+      Apache NetBeans IDE 11.0
+      7-Zip 18.06 + 19.00
+```
+
 ### Build the V1.x BackupGnuCash.jar from source ###
 You will need
 
@@ -933,6 +1060,11 @@ sudo apt-get install openjdk-8-jdk openjfx
 Ubuntu 18.04 includes Java 8 and Java 11.
 BackupGnuCash V1.x needs Java 8, so set the default Java version to 8. See
 [Downgrade Ubuntu 18.04 Java 11 to Java 8](#DowngradeUbuntu18.04ToJava8)
+
+Ubuntu 20.04 does not have openjfx 8 in its repository, so to build and run
+V1.x BackupGnuCash, you need to use a 3rd party java + jfx. As I haven't done
+this, I cannot document how to do it. See
+https://stackoverflow.com/questions/61783369/install-openjdkopenjfx-8-on-ubuntu-20
 
 OR
 ###### Oracle Java 8 jdk (includes JavaFX) ######
@@ -980,7 +1112,7 @@ https://sourceforge.net/projects/sevenzip/.
 
 ##### Java #####
 BackupGnuCash V1.x uses Java version 8 and JavaFX.
-    Openjdk and OpenJFX are NOT available for Windows, so use Oracle versions.
+    Openjdk 8 and OpenJFX 8 are NOT available for Windows, so use Oracle versions.
 
 ###### Oracle Java 8 jdk (includes JavaFX) ######
 Download and install Oracle Java SE 8 Development Kit from
@@ -1096,7 +1228,7 @@ sudo dpkg -i scenebuilder-8.2.0_x64_64.deb
 ```
 
 ##### NetBeans IDE #####
-Ubuntu 18.04 repositories contains NetBeans 10.0 but we need Apache NetBeans 11.
+Ubuntu 18.04 + 20.04 repositories contains NetBeans 10.0 but we need Apache NetBeans 11.
 ```
 cd ~/java
 wget https://www-us.apache.org/dist/incubator/netbeans/incubating-netbeans/incubating-11.0/incubating-netbeans-11.0-bin.zip
@@ -1355,7 +1487,7 @@ does so long as the [Dependencies](#Dependencies) are available.
    sorted before they are saved to the defaultProperties file, so the combobox
    dropdown list will be sorted next time the program is started.
    This is because of the following bug in in Java 1.8.0_92
-     https://bugs.openjdk.java.net/browse/JDK-8087838.
+     https://bugs.openjdk.java.net/browse/JDK-8087838 (fixed in Java 9).
    The use of a SortedList for the combobox can be re-instated after the above
    bug is fixed. See also
    http://stackoverflow.com/questions/38342046/how-to-use-a-sortedlist-with-javafx-editable-combobox-strange-onaction-events

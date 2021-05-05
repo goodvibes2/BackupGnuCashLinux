@@ -1,5 +1,12 @@
 BackupGnuCash
 
+V# 2.1.0 23 Apr 2021 Chris Good
+
+    * Add support for Flatpak on Linux.
+    * 7z[.exe] command: Move password arg from after archive to before.
+      Required for Linux Ubuntu 20.04 p7zip-full 16.02+dfsg-7build1 to
+      fix "No more files" error.
+
 V# 2.0.1 11 Mar 2020 Chris Good
 
     * Fix bug where a deleted Book was not also removed from defaultProps so
