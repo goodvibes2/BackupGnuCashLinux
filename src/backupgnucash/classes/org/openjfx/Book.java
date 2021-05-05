@@ -25,30 +25,33 @@ import javafx.beans.property.StringProperty;
  * @author cgood
  */
 public class Book {
-    
+
     /// instance variables
     private final SimpleStringProperty bookName;
     private final SimpleStringProperty gcDat;
     private final SimpleStringProperty gcVer;
     private final SimpleBooleanProperty gcV2Cfg;
     private final SimpleBooleanProperty gcV3Cfg;
+    private final SimpleBooleanProperty gcFlatpak;
     private final SimpleStringProperty dropBox;
-    
+
     // class variables
     private static String defaultBook = "";
     static final StringProperty defaultProp = new SimpleStringProperty();
 
     // constructor
     public Book(String startBookName, String startGcDat, String startGcVer,
-            Boolean startGcV2Cfg, Boolean startGcV3Cfg, String startDropBox) {
+            Boolean startGcV2Cfg, Boolean startGcV3Cfg, Boolean startGcFlatpak,
+            String startDropBox) {
         this.bookName = new SimpleStringProperty(startBookName);
         this.gcDat = new SimpleStringProperty(startGcDat);
         this.gcVer = new SimpleStringProperty(startGcVer);
         this.gcV2Cfg = new SimpleBooleanProperty(startGcV2Cfg);
         this.gcV3Cfg = new SimpleBooleanProperty(startGcV3Cfg);
+        this.gcFlatpak = new SimpleBooleanProperty(startGcFlatpak);
         this.dropBox = new SimpleStringProperty(startDropBox);
     }
- 
+
     // class methods
     public static String getDefaultBook() {
         return defaultBook;
@@ -57,7 +60,7 @@ public class Book {
         Book.defaultBook = newDefaultBook;
         Book.defaultProp.set(newDefaultBook);
 }
-    
+
     // instance methods
     public String getBookName() {
         return bookName.get();
@@ -65,21 +68,21 @@ public class Book {
     public void setBookName(String bName) {
         bookName.set(bName);
     }
-        
+
     public String getGcDat() {
         return gcDat.get();
     }
     public void setGcDat(String gcDatStr) {
         gcDat.set(gcDatStr);
     }
-    
+
     public String getGcVer() {
         return gcVer.get();
     }
     public void setGcVer(String gcVerStr) {
         gcVer.set(gcVerStr);
     }
-    
+
     public Boolean getGcV2Cfg() {
 //        System.out.println("book.getGcV2Cfg returns: " + gcV2Cfg.get() );
         return gcV2Cfg.get();
@@ -96,11 +99,18 @@ public class Book {
         gcV3Cfg.set(gcV3CfgBool);
     }
 
+    public Boolean getGcFlatpak() {
+        return gcFlatpak.get();
+    }
+    public void setGcFlatpak(Boolean gcFlatpakBool) {
+        gcFlatpak.set(gcFlatpakBool);
+    }
+
     public String getDropBox() {
         return dropBox.get();
     }
     public void setDropBox(String dropBoxStr) {
         dropBox.set(dropBoxStr);
     }
-           
+
 }

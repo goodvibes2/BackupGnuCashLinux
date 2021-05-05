@@ -30,7 +30,7 @@
    28/06/2016 1.20 1. Also check for Windows 7-Zip in Program Files (x86).
                    2. Allow configurations for multiple books.
                    3. Make ToolTips font bigger (in BackupGnuCash.fxml).
-   27/05/2018 1.3.0 Mods for GnuCash 3, add options for backing up V2 + V3 
+   27/05/2018 1.3.0 Mods for GnuCash 3, add options for backing up V2 + V3
                     configuration and add Help button.
    26/02/2019 1.3.1 Linux Java 8 Help button causes hang: wrap the call to any
                     AWT APIs (Desktop.getDesktop().browse) in a runnable and
@@ -56,6 +56,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.Collator;
@@ -147,6 +148,8 @@ public class BackupGnuCashController implements Initializable {
     @FXML
     private CheckBox chbGcV3Cfg;
     @FXML
+    private CheckBox chbGcFlatpak;
+    @FXML
     private Label lblDropBox;
     @FXML
     private TextField txtDropBox;
@@ -191,9 +194,9 @@ public class BackupGnuCashController implements Initializable {
     private static String gcBook = "MyBook";   // current book name
     private static String gcDatFil; // initial default GnuCash data file
     private static String gcVer = ""; // optional version backup filename suffix
-    private static Boolean gcV2Cfg = true; // Backup GnuCash V2 config files ?
-    private static Boolean gcV3Cfg = true; // Backup GnuCash V3 config files ?
-
+    private static Boolean gcV2Cfg = false; // Backup GnuCash V2  config files ?
+    private static Boolean gcV3Cfg = true; // Backup GnuCash V3+ config files ?
+    private static Boolean gcFlatpak = false; // Backup GnuCash V3+ flatpak config files ?
     private static String dropBox; // inital default Dropbox dir
 
     private static Path pathGcDatFilStr;
@@ -207,6 +210,14 @@ public class BackupGnuCashController implements Initializable {
             PROPERTIES_DIR + FILE_SEPARATOR + "GnuCashGSettings.reg";
     private static final String OUT_DCONF_FILE = HOME_DIR + FILE_SEPARATOR +
             PROPERTIES_DIR + FILE_SEPARATOR + "gnucash.dconf";
+    // Linux Flatpak base for .gcm + saved-reports eg $HOME/.var/app/org.gnucash.GnuCash/data/gnucash/saved-reports-2.8
+    //  LINUX_BASE_FLAT  = $HOME/.var/app/org.gnucash.GnuCash/
+    private static final String LINUX_BASE_FLAT  = HOME_DIR + FILE_SEPARATOR + ".var" +
+            FILE_SEPARATOR + "app" + FILE_SEPARATOR + "org.gnucash.GnuCash" + FILE_SEPARATOR ;
+    // Linux Non Flatpack base for .gcm + saved-reports eg $HOME/.local/share/gnucash/books/[book].gnucash.gcm
+    //  LINUX_BASE_NON_FLAT = $HOME/.local/share/gnucash
+    private static final String LINUX_BASE_NON_FLAT = HOME_DIR + FILE_SEPARATOR + ".local" +
+            FILE_SEPARATOR + "share" + FILE_SEPARATOR + "gnucash";  // Note NO trailing FILE_SEPARATOR
     // Saved Settings
     private static final String DEFAULT_PROP = "defaultBook";
     private static final String BOOKNAME_PROP = "gcBook.";
@@ -215,6 +226,7 @@ public class BackupGnuCashController implements Initializable {
     private static final String GCVER_PROP = "gcVer.";
     private static final String GCV2CFG_PROP = "gcV2Cfg.";
     private static final String GCV3CFG_PROP = "gcV3Cfg.";
+    private static final String GCFLATPAK_PROP = "gcFlatpak.";
 
     private static final String DEF_PROP = HOME_DIR + FILE_SEPARATOR +
             PROPERTIES_DIR + FILE_SEPARATOR + "defaultProperties";
@@ -285,6 +297,7 @@ public class BackupGnuCashController implements Initializable {
             defaultProps.remove(GCVER_PROP + suffix);
             defaultProps.remove(GCV2CFG_PROP + suffix);
             defaultProps.remove(GCV3CFG_PROP + suffix);
+            defaultProps.remove(GCFLATPAK_PROP + suffix);
         }
     }
 
@@ -317,7 +330,7 @@ public class BackupGnuCashController implements Initializable {
 
         // Until problem in Java 8u92 with adding items to ComboBox which uses SortedList is fixed,
         //  sort the books before saving
-  
+
 //      Set bookSet = bookMap.keySet();
 //      Iterator itr = bookSet.iterator();
 
@@ -333,8 +346,8 @@ public class BackupGnuCashController implements Initializable {
             defaultProps.setProperty(GCDATFIL_PROP + suffix, refBook.getGcDat());
             defaultProps.setProperty(GCVER_PROP + suffix, refBook.getGcVer());
             defaultProps.setProperty(GCV2CFG_PROP + suffix, refBook.getGcV2Cfg().toString());
-            defaultProps.setProperty(GCV3CFG_PROP + suffix, refBook.getGcV3Cfg().toString()
-            );
+            defaultProps.setProperty(GCV3CFG_PROP + suffix, refBook.getGcV3Cfg().toString());
+            defaultProps.setProperty(GCFLATPAK_PROP + suffix, refBook.getGcFlatpak().toString());
         }
 
         try (FileOutputStream out = new FileOutputStream(DEF_PROP)) {
@@ -413,10 +426,12 @@ public class BackupGnuCashController implements Initializable {
                 txtGcVer.setText(book.getGcVer());
                 chbGcV2Cfg.setSelected(book.getGcV2Cfg());
                 chbGcV3Cfg.setSelected(book.getGcV3Cfg());
+                chbGcFlatpak.setSelected(book.getGcFlatpak());
                 txtDropBox.setText(book.getDropBox());
             } else {
                 Book book = new Book(selected, txtGcDatFilStr.getText(), txtGcVer.getText(),
-                        chbGcV2Cfg.isSelected(), chbGcV3Cfg.isSelected(), txtDropBox.getText());
+                        chbGcV2Cfg.isSelected(), chbGcV3Cfg.isSelected(),
+                        chbGcFlatpak.isSelected(), txtDropBox.getText());
                 bookMap.put(selected, book);
                 //bookComboBox.setValue(selected);     // set selected Value - do NOT do here causes loop
                 bookComboBoxData.add(selected);
@@ -460,6 +475,7 @@ public class BackupGnuCashController implements Initializable {
 
             gcV2Cfg = true; // Did not exist in versions before 1.20
             gcV3Cfg = true; // Did not exist in versions before 1.20
+            gcFlatpak = true; // Did not exist in versions before 1.20
 
             // Check for existence of new property gcBook.0
             tmpStr = defaultProps.getProperty(BOOKNAME_PROP + "0");
@@ -510,9 +526,11 @@ public class BackupGnuCashController implements Initializable {
                 gcVer = defaultProps.getProperty(GCVER_PROP + suffix);
                 gcV2Cfg = Boolean.valueOf(defaultProps.getProperty(GCV2CFG_PROP + suffix));
                 gcV3Cfg = Boolean.valueOf(defaultProps.getProperty(GCV3CFG_PROP + suffix));
+                gcFlatpak = Boolean.valueOf(defaultProps.getProperty(GCFLATPAK_PROP + suffix));
                 dropBox = defaultProps.getProperty(DROPBOX_PROP + suffix);
 
-                Book book = new Book(gcBook, gcDatFil, gcVer, gcV2Cfg, gcV3Cfg, dropBox);
+                Book book = new Book(gcBook, gcDatFil, gcVer, gcV2Cfg, gcV3Cfg, gcFlatpak,
+                        dropBox);
                 bookComboBoxData.add(gcBook);
                 bookMap.put(gcBook, book);  // save ref to book in hashmap
 
@@ -522,13 +540,15 @@ public class BackupGnuCashController implements Initializable {
                     txtGcVer.setText(gcVer);
                     chbGcV2Cfg.setSelected(gcV2Cfg);
                     chbGcV3Cfg.setSelected(gcV3Cfg);
+                    chbGcFlatpak.setSelected(gcFlatpak);
                     txtDropBox.setText(dropBox);
                     defaultBookChb.setSelected(true);
                 }
                 //i++;
             }
             if (bookComboBoxData.isEmpty()) {
-                Book book = new Book(gcBook, gcDatFil, gcVer, gcV2Cfg, gcV3Cfg, dropBox);
+                Book book = new Book(gcBook, gcDatFil, gcVer, gcV2Cfg, gcV3Cfg,
+                        gcFlatpak, dropBox);
                 bookComboBoxData.add(gcBook);
                 bookMap.put(gcBook, book);
             }
@@ -563,7 +583,8 @@ public class BackupGnuCashController implements Initializable {
             if (ex.getClass().toString().equals("class java.io.FileNotFoundException")) {
 //              System.out.println("getUserDefaults: " + ex.getMessage());
                 Book.setDefaultBook(gcBook);
-                Book book = new Book(gcBook, gcDatFil, gcVer, gcV2Cfg, gcV3Cfg, dropBox);
+                Book book = new Book(gcBook, gcDatFil, gcVer, gcV2Cfg, gcV3Cfg,
+                        gcFlatpak, dropBox);
                 bookComboBoxData.add(gcBook);
                 bookMap.put(gcBook, book);
 //              bookComboBox.setItems(new SortedList<>(bookComboBoxData, Collator.getInstance()));  // JDK-8087838
@@ -572,6 +593,7 @@ public class BackupGnuCashController implements Initializable {
                 defaultBookChb.setSelected(true);
                 chbGcV2Cfg.setSelected(gcV2Cfg);
                 chbGcV3Cfg.setSelected(gcV3Cfg);
+                chbGcFlatpak.setSelected(gcFlatpak);
             } else {
                 Logger.getLogger(BackupGnuCashController.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -728,7 +750,7 @@ boolean exportDconf() {
 
         // Use Linux dconf to dump GnuCash dconf entries to a text file which can be backed up
         // E.g dconf dump /org/gnucash/ > $HOME/.BupGc/gnucash.dconf
-        
+
         int exitVal = 0;
         String[] cmdExport = new String[3];
         String strDconf = "/usr/bin/dconf";
@@ -838,7 +860,7 @@ boolean exportDconf() {
             "To make another book the default:\n" +
             " First select the new default book, then tick this checkbox."
         ));
-        
+
         btnDelete.setTooltip(new Tooltip(
             "Delete:\nDelete settings for the current book.\n" +
             "The settings for the last remaining book and the default book cannot be deleted.\n" +
@@ -848,7 +870,7 @@ boolean exportDconf() {
         btnHelp.setTooltip(new Tooltip(
             "Help:\nOpen in the default web brower:\n" + HELP_URL
         ));
-        
+
         btnSaveSettings.setTooltip(new Tooltip(
             "Save Settings:\nSave settings for all books in\n" +
             DEF_PROP + "\n" + "The password is NOT saved."
@@ -883,7 +905,7 @@ boolean exportDconf() {
         ));
 
         chbGcV3Cfg.setTooltip(new Tooltip(
-            "Backup GnuCash V3 configuration folders and files?\n"
+            "Backup GnuCash V3+ configuration folders and files?\n"
           + " E.g. Among others,\n"
           + "   Windows: C:\\Users\\[Name]\\AppData\\Roaming\\GnuCash\n"
           + "   Linux:   /home/[Name]/.config/gnucash\n"
@@ -898,6 +920,15 @@ boolean exportDconf() {
             " and the contents of the registry key\n" +
             "  HKCU\\Software\\GSettings\\org\\gnucash"
 */
+        ));
+
+        chbGcFlatpak.setTooltip(new Tooltip(
+            "Backup GnuCash V3+ Linux Flatpak configuration folders and files?\n"
+          + " E.g. Among others,\n"
+          + "   Windows: Not supported\n"
+          + "   Linux:   /home/[Name]/.var/app/org.gnucash.GnuCash/data/gnucash\n"
+          + "            /home/[Name]/.var/app/org.gnucash.GnuCash/config\n"
+          + "Use the Help button to see full details."
         ));
 
         txtDropBox.setTooltip(new Tooltip(
@@ -1025,8 +1056,8 @@ boolean exportDconf() {
                             pathGcGcm.toString() + " is not readable or does not exist\n");
                     }
                 }
-                
-                if (chbGcV3Cfg.isSelected()) {      
+
+                if (chbGcV3Cfg.isSelected()) {
                     // GnuCash V3
                     // Chk Saved Reports file exists
                     // GnuCash V3 uses saved-reports-2.4 if no saved-reports-2.8 exists
@@ -1039,34 +1070,49 @@ boolean exportDconf() {
                             FILE_SEPARATOR + "GnuCash" + FILE_SEPARATOR +
                             "saved-reports-2.8");
                     } else {
-                        // Linux   $HOME/.local/share/gnucash/saved-reports-2.8
-                        pathGcSavRpt = Paths.get(HOME_DIR + FILE_SEPARATOR + ".local" +
-                            FILE_SEPARATOR + "share" + FILE_SEPARATOR + "gnucash" +
-                            FILE_SEPARATOR + "saved-reports-2.8");
+                        // Linux
+                        if (chbGcFlatpak.isSelected()) {
+                            // Flatpak  eg $HOME/.var/app/org.gnucash.GnuCash/data/gnucash/saved-reports-2.8
+                            // LINUX_BASE_FLAT = $HOME/.var/app/org.gnucash.GnuCash/
+                            pathGcSavRpt = Paths.get(LINUX_BASE_FLAT + "data" +
+                                FILE_SEPARATOR + "gnucash" + FILE_SEPARATOR + "saved-reports-2.8");
+                        } else {
+                            // Non Flatpak   $HOME/.local/share/gnucash/saved-reports-2.8
+                            // LINUX_BASE_NON_FLAT = $HOME/.local/share/gnucash
+                            pathGcSavRpt = Paths.get(LINUX_BASE_NON_FLAT +
+                                FILE_SEPARATOR + "saved-reports-2.8");
+                        }
                     }
                     if (Files.isReadable(pathGcSavRpt)) {
-                        taLog.appendText("Info: Found GnuCash 3 Saved Reports " +
+                        taLog.appendText("Info: Found GnuCash 3+ Saved Reports " +
                             pathGcSavRpt.toString() + "\n");
                     } else {
                         // chk saved-reports-2.4 exists
                         if (OS_NAME.startsWith("Windows")) {
                             pathGcSavRpt = Paths.get(System.getenv("APPDATA") +
-                                "\\GnuCash\\saved-reports-2.4");
+                                FILE_SEPARATOR + "GnuCash" +
+                                FILE_SEPARATOR + "saved-reports-2.4");
                         } else {
                             // Linux
-                            pathGcSavRpt = Paths.get(HOME_DIR + FILE_SEPARATOR +
-                                ".local" + FILE_SEPARATOR + "share" + FILE_SEPARATOR +
-                                "gnucash" + FILE_SEPARATOR + "saved-reports-2.4");
+                            if (chbGcFlatpak.isSelected()) {
+                                // Flatpak
+                                pathGcSavRpt = Paths.get(LINUX_BASE_FLAT + "data" +
+                                    FILE_SEPARATOR + "gnucash" + FILE_SEPARATOR + "saved-reports-2.4");
+                            } else {
+                                // Non Flatpak
+                                pathGcSavRpt = Paths.get(LINUX_BASE_NON_FLAT +
+                                    FILE_SEPARATOR + "saved-reports-2.4");
+                            }
                         }
                         if (Files.isReadable(pathGcSavRpt)) {
-                            taLog.appendText("Info: Found GnuCash 3 " + pathGcSavRpt.toString() + "\n");
+                            taLog.appendText("Info: Found GnuCash 2 " + pathGcSavRpt.toString() + "\n");
                         } else {
-                            taLog.appendText("Info: GnuCash 3 " + pathGcSavRpt.toString() +
+                            taLog.appendText("Info: GnuCash 2 " + pathGcSavRpt.toString() +
                                 " is not readable or does not exist\n");
                         }
                     }
 
-                    // Chk metadata
+                    // Chk metadata (.gcm)
                     if (OS_NAME.startsWith("Windows")) {
                         // chk %APPDATA%\GnuCash\books\[BOOK].gnucash.gcm exists
                         //   Note %APPDATA% is usually C:\Users\%USERNAME%\AppData\Roaming
@@ -1074,18 +1120,26 @@ boolean exportDconf() {
                         pathGcGcm = Paths.get(System.getenv("APPDATA") + FILE_SEPARATOR +
                             "GnuCash" + FILE_SEPARATOR + "books" + FILE_SEPARATOR +
                             fileName.filename() + "." + fileName.extension() + ".gcm");
-                    } else {
-                        // chk $HOME/.local/share/gnucash/books/[book].gnucash.gcm exists
-                        pathGcGcm = Paths.get(HOME_DIR + FILE_SEPARATOR + ".local" +
-                            FILE_SEPARATOR + "share" + FILE_SEPARATOR + "gnucash" +
-                            FILE_SEPARATOR + "books" + FILE_SEPARATOR +
-                            fileName.filename() + "." + fileName.extension()+ ".gcm");
+                    } else { // Linux
+                        if (chbGcFlatpak.isSelected()) {
+                            // Flatpak $HOME/.var/app/org.gnucash.GnuCash/data/gnucash/books/[BOOK][_n].gnucash.gcm
+                            // LINUX_BASE_FLAT = $HOME/.var/app/org.gnucash.GnuCash/
+                            pathGcGcm = Paths.get(LINUX_BASE_FLAT + "data" + FILE_SEPARATOR +
+                                "gnucash" + FILE_SEPARATOR + "books" + FILE_SEPARATOR +
+                                fileName.filename() + "." + fileName.extension() + ".gcm");
+                        } else {
+                            // Non Flatpak $HOME/.local/share/gnucash/books/[book].gnucash.gcm
+                            // LINUX_BASE_NON_FLAT = $HOME/.local/share/gnucash
+                            pathGcGcm = Paths.get(LINUX_BASE_NON_FLAT + FILE_SEPARATOR +
+                                "books" + FILE_SEPARATOR +
+                                fileName.filename() + "." + fileName.extension() + ".gcm");
+                        }
                     }
                     if (Files.isReadable(pathGcGcm)) {
-                        taLog.appendText("Info: Found GnuCash 3 Configuration metadata " +
+                        taLog.appendText("Info: Found GnuCash 3+ Configuration metadata " +
                             pathGcGcm.toString() + "\n");
                     } else {
-                        taLog.appendText("Info: GnuCash 3 Configuration metadata " +
+                        taLog.appendText("Info: GnuCash 3+ Configuration metadata " +
                             pathGcGcm.toString() + " is not readable or does not exist\n");
                     }
                 }
@@ -1177,6 +1231,7 @@ boolean exportDconf() {
                 book.setGcVer(txtGcVer.getText());
                 book.setGcV2Cfg(chbGcV2Cfg.isSelected());
                 book.setGcV3Cfg(chbGcV3Cfg.isSelected());
+                book.setGcFlatpak(chbGcFlatpak.isSelected());
                 book.setDropBox(txtDropBox.getText());
                 System.out.println("enable_or_disable:"
                     + "set book=" + bookComboBox.getValue()
@@ -1184,6 +1239,7 @@ boolean exportDconf() {
 //                    + " GcVer=" + txtGcVer.getText()
                       + " GcV2Cfg=" + chbGcV2Cfg.isSelected()
                       + " GcV3Cfg=" + chbGcV3Cfg.isSelected()
+                      + " GcFlatpak=" + chbGcFlatpak.isSelected()
 //                    + " DropBox=" + txtDropBox.getText()
                 );
             } else {
@@ -1192,6 +1248,7 @@ boolean exportDconf() {
                                      txtGcVer.getText(),
                                      chbGcV2Cfg.isSelected(),
                                      chbGcV3Cfg.isSelected(),
+                                     chbGcFlatpak.isSelected(),
                                      txtDropBox.getText());
                 bookMap.put(bookComboBox.getValue(), book);
                 bookComboBoxData.add(bookComboBox.getValue().toString());
@@ -1232,7 +1289,7 @@ boolean exportDconf() {
 
     /**
      * Backup GnuCash
-     * 
+     *
      * Note that 7z will backup all files and directories, including sub-folders,
      *  when the arg is a directory with a "\" (Windows), or "/" (Linux) suffix
      *
@@ -1242,8 +1299,8 @@ boolean exportDconf() {
      * /C               NOT Used
      * "E:\Program Files\7-Zip\7z.exe"
      *   a -spf2
-     *   E:\Data\Dropbox\GnuCash\GnuCashXXXX_%yyyymmddhhmm%_267.7z
      *   -p%pswd%
+     *   E:\Data\Dropbox\GnuCash\GnuCashXXXX_%yyyymmddhhmm%_267.7z
      *   E:\Data\GnuCash\267\XXXX\XXXX.gnucash
      *   V2
      *    C:\Users\[Name]\.gnucash\
@@ -1273,8 +1330,8 @@ boolean exportDconf() {
      * -c                                                   NOT Used
      * /usr/bin/7z
      *   a -spf2
-     *   $HOME/Dropbox/GnuCash/GnuCashXXXX_yyyymmddhhmm_267.7z
      *   -p"pswd"
+     *   $HOME/Dropbox/GnuCash/GnuCashXXXX_yyyymmddhhmm_267.7z
      *   $HOME/GnuCash/267/XXXX/XXXX.gnucash
      *   V2
      *    $HOME/.gnucash/
@@ -1283,20 +1340,35 @@ boolean exportDconf() {
      *      $HOME/.gnucash/books/XXXX.gnucash.gcm
      *    $HOME/.gtkrc-2.0      ### NOT on Linux
      *    $HOME/.gtkrc-2.0.gnucash
-     *   V3
-     *    $HOME/.config/gnucash/
-     *     which includes (if used)
-     *      $HOME/.config/gnucash/gtk-3.0.css
-     *    $HOME/.config/gtk-3.0/
-     *     which includes (if used)
-     *      $HOME/.config/gtk-3.0/settings.ini
-     *      $HOME/.config/gtk-3.0/gtk-css
-     *      $HOME/.config/gtk-3.0/gtk-3.0.css
-     *    $HOME/.local/share/gnucash/
-     *     which includes
-     *      $HOME/.local/share/gnucash/saved-reports-2.[48]
-     *      $HOME/.local/share/gnucash/books/[BOOK].gnucash[_n].gcm
-     *    /etc/gnucash/environment.local
+     *   V3+
+     *    Non Flatpak
+     *     $HOME/.config/gnucash/
+     *      which includes (if used)
+     *       $HOME/.config/gnucash/gtk-3.0.css
+     *     $HOME/.config/gtk-3.0/
+     *      which includes (if used)
+     *       $HOME/.config/gtk-3.0/settings.ini
+     *       $HOME/.config/gtk-3.0/gtk.css
+     *       $HOME/.config/gtk-3.0/gtk-3.0.css
+     *     $HOME/.local/share/gnucash/
+     *      which includes
+     *       $HOME/.local/share/gnucash/saved-reports-2.[48]
+     *       $HOME/.local/share/gnucash/books/[BOOK].gnucash[_n].gcm
+     *     /etc/gnucash/environment.local
+     *    Flatpak
+     *     $HOME/.var/app/org.gnucash.GnuCash/config/
+     *      which includes (if used)
+     *       $HOME/.var/app/org.gnucash.GnuCash/config/gtk-3.0/settings.ini
+     *       $HOME/.var/app/org.gnucash.GnuCash/config/gtk-3.0/gtk.css
+     *       $HOME/.var/app/org.gnucash.GnuCash/config/gnucash/gtk-3.0.css
+     *     $HOME/.var/app/org.gnucash.GnuCash/data/gnucash/
+     *      which includes
+     *       $HOME/.var/app/org.gnucash.GnuCash/data/gnucash/saved-reports-2.[48]
+     *       $HOME/.var/app/org.gnucash.GnuCash/data/gnucash/books/[BOOK][_n].gnucash.gcm
+     *     Single User
+     *       ~/.local/share/flatpak/app/org.gnucash.GnuCash/current/active/files/etc/gnucash/environment.local
+     *     ALL Users (if single user doesn't exist)
+     *       /var/lib/flatpak/app/org.gnucash.GnuCash/current/active/files/etc/gnucash/environment.local
      *
      *   $HOME/.BupGc/gnucash.dconf
      *   $HOME/.aqbanking/
@@ -1395,6 +1467,9 @@ boolean exportDconf() {
                                 //    ~/.config/gnucash
                                 //    ~/.local/share/gnucash
 
+            // password
+            cmd[i++] = "-p" + txtPswd.getText();
+
             // archive file string eg
             // Windows:
             // C:\Users\[USER_NAME]\Dropbox\GnuCash\GnuCashXXXX_yyyymmddhhmm_267.7z
@@ -1418,9 +1493,6 @@ boolean exportDconf() {
 //          cmd[i++] = "\"" + strArchive + "\"";
             cmd[i++] = strArchive;
 
-            // password
-            cmd[i++] = "-p" + txtPswd.getText();
-
             // GC data file eg E:\Data\GnuCash\267\XXXX\XXXX.gnucash
             cmd[i++] = txtGcDatFilStr.getText();
 
@@ -1435,9 +1507,17 @@ boolean exportDconf() {
             //                   C:\Users\[Name]\aqbanking\
             //     Linux   V2    $HOME/.gnucash/
             //                   $HOME/.gtkrc-2.0.gnucash
-            //             V3    $HOME/.config/gnucash/
-            //                   $HOME/.config/gtk-3.0/
-            //                   $HOME/.local/share/gnucash/
+            //             V3    Flatpak
+            //                    $HOME/.var/app/org.gnucash.GnuCash/config/
+            //                    $HOME/.var/app/org.gnucash.GnuCash/data/gnucash/
+            //                    Single User
+            //                      ~/.local/share/flatpak/app/org.gnucash.GnuCash/current/active/files/etc/gnucash/environment.local
+            //                    ALL Users (if single user doesn't exist)
+            //                      /var/lib/flatpak/app/org.gnucash.GnuCash/current/active/files/etc/gnucash/environment.local
+            //                   Non Flatpak
+            //                    $HOME/.config/gnucash/
+            //                    $HOME/.config/gtk-3.0/
+            //                    $HOME/.local/share/gnucash/
             //             V2+V3 $HOME/.BupGc/gnucash.dconf
             //                   $HOME/.aqbanking/
 
@@ -1507,39 +1587,90 @@ boolean exportDconf() {
                         cmd[i++] = pathGcGtk.toString();
                     }
                 } else { // Linux
-                    // $HOME/.config/gnucash/
-                    cmd[i++] = HOME_DIR + FILE_SEPARATOR + ".config" +
-                            FILE_SEPARATOR + "gnucash" + FILE_SEPARATOR;
-                    // $HOME/.config/gtk-3.0/
-                    Path pathGcGtk = Paths.get(HOME_DIR + FILE_SEPARATOR +
-                            ".config" + FILE_SEPARATOR + "gtk-3.0");
-                    if (Files.isReadable(pathGcGtk)) {
-                        cmd[i++] = pathGcGtk.toString() + FILE_SEPARATOR;
-                    } else {
-                        taLog.appendText("Info: Skip as does not exist: " +
-                                pathGcGtk.toString() + "\n");
-                    }
-                    // $HOME/.local/share/gnucash/
-                    Path pthGcLocal = Paths.get(HOME_DIR + FILE_SEPARATOR +
-                            ".local" + FILE_SEPARATOR + "share" +
+                    if (chbGcFlatpak.isSelected()) {
+                        // $HOME/.var/app/org.gnucash.GnuCash/config/
+                        // LINUX_BASE_FLAT = $HOME/.var/app/org.gnucash.GnuCash/
+                        Path pathGcCfg = Paths.get(LINUX_BASE_FLAT + "config");
+                        if (Files.isReadable(pathGcCfg)) {
+                            cmd[i++] = pathGcCfg.toString() + FILE_SEPARATOR;
+                        } else {
+                            taLog.appendText("Info: Skip as does not exist: " +
+                                    pathGcCfg.toString() + "\n");
+                        }
+                        // $HOME/.var/app/org.gnucash.GnuCash/data/gnucash/
+                        Path pthGcLocal = Paths.get(LINUX_BASE_FLAT + "data" +
                             FILE_SEPARATOR + "gnucash");
-                    if (Files.exists(pthGcLocal)) {
-                        cmd[i++] = pthGcLocal.toString() + FILE_SEPARATOR;
-                    } else {
-                        taLog.appendText("Info: Skip as does not exist: " +
-                                pthGcLocal.toString() + "\n");
-                    }
-                    // /etc/gnucash/environment.local
-                    Path pthGcEnv = Paths.get(FILE_SEPARATOR +
-                        "etc" + FILE_SEPARATOR + "gnucash" +
-                        FILE_SEPARATOR + "environment.local");
-                    if (Files.exists(pthGcEnv)) {
-                        cmd[i++] = pthGcEnv.toString() + FILE_SEPARATOR;
+                        if (Files.exists(pthGcLocal)) {
+                            cmd[i++] = pthGcLocal.toString() + FILE_SEPARATOR;
+                        } else {
+                            taLog.appendText("Info: Skip as does not exist: " +
+                                    pthGcLocal.toString() + "\n");
+                        }
+                        // environment.local Flatpak Single User install
+                        //   ~/.local/share/flatpak/app/org.gnucash.GnuCash/current/active/files/etc/gnucash/environment.local
+                        // As .7z archives do not support (or follow) symbolic links, convert
+                        //  filestring to a path with symlinks resolved to their final target
+                        String strPath = HOME_DIR + "/.local/share/flatpak/app/" +
+                            "org.gnucash.GnuCash/current/active/files/etc/gnucash/environment.local";
+                        Path pthGcEnv;
+                        try {
+                            pthGcEnv = Paths.get(strPath).toRealPath();
+                            cmd[i++] = pthGcEnv.toString();
+                        } catch (NoSuchFileException x) {
+                            taLog.appendText("Info: Skip Single user environment.local" +
+                                " as does not exist: " + strPath + "\n");
+                            // check ALL users environment.local
+                            strPath = "/var/lib/flatpak/app/org.gnucash.GnuCash/" +
+                                "current/active/files/etc/gnucash/environment.local";
+                            try {
+                                pthGcEnv = Paths.get(strPath).toRealPath();
+                                cmd[i++] = pthGcEnv.toString();
+                            } catch (NoSuchFileException ex) {
+                                taLog.appendText("Info: Skip ALL user environment.local" +
+                                    " as does not exist: " + strPath + "\n");
+                            } catch (IOException ex) {
+                                // other sort of file error
+                                System.err.println(x);
+                                taLog.appendText("IOException ALL users environment.local " + strPath);
+                            }
+                        } catch (IOException x) {
+                            System.err.println(x);
+                            taLog.appendText("IOException Single users environment.local " + strPath);
+                        }
+                    } else { // Linux V3 Non Flatpak
+                        // $HOME/.config/gnucash/
+                        cmd[i++] = HOME_DIR + FILE_SEPARATOR + ".config" +
+                                FILE_SEPARATOR + "gnucash" + FILE_SEPARATOR;
+                        // $HOME/.config/gtk-3.0/
+                        Path pathGcGtk = Paths.get(HOME_DIR + FILE_SEPARATOR +
+                                ".config" + FILE_SEPARATOR + "gtk-3.0");
+                        if (Files.isReadable(pathGcGtk)) {
+                            cmd[i++] = pathGcGtk.toString() + FILE_SEPARATOR;
+                        } else {
+                            taLog.appendText("Info: Skip as does not exist: " +
+                                    pathGcGtk.toString() + "\n");
+                        }
+                        // $HOME/.local/share/gnucash/
+                        // LINUX_BASE_NON_FLAT = = $HOME/.local/share/gnucash
+                        Path pthGcLocal = Paths.get(LINUX_BASE_NON_FLAT);
+                        if (Files.exists(pthGcLocal)) {
+                            cmd[i++] = pthGcLocal.toString() + FILE_SEPARATOR;
+                        } else {
+                            taLog.appendText("Info: Skip as does not exist: " +
+                                    pthGcLocal.toString() + "\n");
+                        }
+                        // /etc/gnucash/environment.local
+                        Path pthGcEnv = Paths.get(FILE_SEPARATOR +
+                            "etc" + FILE_SEPARATOR + "gnucash" +
+                            FILE_SEPARATOR + "environment.local");
+                        if (Files.exists(pthGcEnv)) {
+                            cmd[i++] = pthGcEnv.toString();
+                        }
                     }
                 }
             }
 
-            // Backup things common to GnuCash V2 + V3
+            // Backup things common to GnuCash V2 + V3+
             if (OS_NAME.startsWith("Windows")) {
                 // Exported registry file: C:\Users\[Name]\.BupGc\GnuCashGSettings.reg
                 if (exportRegistry()) {
@@ -1768,7 +1899,7 @@ boolean exportDconf() {
             USER_NAME = System.getenv("USERNAME").toLowerCase();
             gcDatFil = HOME_DIR + "\\Documents\\GnuCash\\MyFileName.gnucash";
             dropBox = HOME_DIR + "\\Dropbox";
-
+            chbGcFlatpak.setDisable(true); // flatpak only supported for Linux
         } else {
             USER_NAME = System.getenv("USER").toLowerCase();
             gcDatFil = HOME_DIR + "/GnuCash/MyFileName.gnucash";
@@ -1922,7 +2053,17 @@ boolean exportDconf() {
                 }
             });
 
-            if (boolDirOK) {           
+            // handle changes to chbGcFlatpak.selectedProperty
+            chbGcFlatpak.selectedProperty().addListener((ObservableValue<? extends Boolean> o,
+                    Boolean oldVal, Boolean newVal) -> {
+                System.out.println("chbGcFlatpak.selectedProperty has changed" +
+                    " oldVal=" + oldVal + " newVal=" + newVal + " o=" + o);
+                if (!loadingScreen) {
+                    enable_or_disable_buttons();
+                }
+            });
+
+            if (boolDirOK) {
                 if ((txtGcDatFilStr.getText() == null) || (txtGcDatFilStr.getText().isEmpty())) {
 //                    System.out.println("initialize(): txtGcDatFilStr.setText to " + getGcDatFil());
                     txtGcDatFilStr.setText(getGcDatFil());

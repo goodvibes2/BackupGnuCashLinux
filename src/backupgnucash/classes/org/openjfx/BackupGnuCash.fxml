@@ -55,7 +55,7 @@
             <Font name="Tahoma" size="24.0" />
          </font>
       </Text>
-      <Text fx:id="versionNo" strokeType="OUTSIDE" strokeWidth="0.0" text="V# 2.0.1 11 Mar 2020" textAlignment="RIGHT" GridPane.columnIndex="3" GridPane.columnSpan="2147483647" GridPane.halignment="RIGHT">
+      <Text fx:id="versionNo" strokeType="OUTSIDE" strokeWidth="0.0" text="V# 2.1.0 23 Apr 2021" textAlignment="RIGHT" GridPane.columnIndex="3" GridPane.columnSpan="2147483647" GridPane.halignment="RIGHT">
          <font>
             <Font size="12.0" />
          </font>
@@ -100,7 +100,8 @@
       </Label>
       <TextField fx:id="txtGcVer" GridPane.columnIndex="1" GridPane.rowIndex="6" />
       <CheckBox fx:id="chbGcV2Cfg" mnemonicParsing="false" selected="true" text="V2" GridPane.columnIndex="3" GridPane.rowIndex="5" />
-      <CheckBox fx:id="chbGcV3Cfg" mnemonicParsing="false" selected="true" text="V3" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+      <CheckBox fx:id="chbGcV3Cfg" mnemonicParsing="false" prefHeight="21.0" prefWidth="59.0" selected="true" text="V3+" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+      <CheckBox fx:id="chbGcFlatpak" mnemonicParsing="false" prefHeight="21.0" prefWidth="88.0" text="Flatpak" GridPane.columnIndex="4" GridPane.rowIndex="6" />
       <Label fx:id="lblDropBox" text="Dropbox" GridPane.rowIndex="8">
          <font>
             <Font size="14.0" />
