@@ -1242,8 +1242,8 @@ boolean exportDconf() {
      * /C               NOT Used
      * "E:\Program Files\7-Zip\7z.exe"
      *   a -spf2
-     *   E:\Data\Dropbox\GnuCash\GnuCashXXXX_%yyyymmddhhmm%_267.7z
      *   -p%pswd%
+     *   E:\Data\Dropbox\GnuCash\GnuCashXXXX_%yyyymmddhhmm%_267.7z
      *   E:\Data\GnuCash\267\XXXX\XXXX.gnucash
      *   V2
      *    C:\Users\[Name]\.gnucash\
@@ -1273,8 +1273,8 @@ boolean exportDconf() {
      * -c                                                   NOT Used
      * /usr/bin/7z
      *   a -spf2
-     *   $HOME/Dropbox/GnuCash/GnuCashXXXX_yyyymmddhhmm_267.7z
      *   -p"pswd"
+     *   $HOME/Dropbox/GnuCash/GnuCashXXXX_yyyymmddhhmm_267.7z
      *   $HOME/GnuCash/267/XXXX/XXXX.gnucash
      *   V2
      *    $HOME/.gnucash/
@@ -1395,6 +1395,9 @@ boolean exportDconf() {
                                 //    ~/.config/gnucash
                                 //    ~/.local/share/gnucash
 
+            // password
+            cmd[i++] = "-p" + txtPswd.getText();
+
             // archive file string eg
             // Windows:
             // C:\Users\[USER_NAME]\Dropbox\GnuCash\GnuCashXXXX_yyyymmddhhmm_267.7z
@@ -1417,9 +1420,6 @@ boolean exportDconf() {
                 strVerSuffix + ".7z";
 //          cmd[i++] = "\"" + strArchive + "\"";
             cmd[i++] = strArchive;
-
-            // password
-            cmd[i++] = "-p" + txtPswd.getText();
 
             // GC data file eg E:\Data\GnuCash\267\XXXX\XXXX.gnucash
             cmd[i++] = txtGcDatFilStr.getText();
