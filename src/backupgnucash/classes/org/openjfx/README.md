@@ -121,13 +121,29 @@ Features include
 
     The **dconf** tool can also be used to reload the GnuCash dconf entries.
 
-    GNU/Linux GnuCash installed as a Flatpak, is configured to access the host
-    dconf directly so BackupGnuCash doesn't need to do anything extra to backup
-    the GnuCash dconf settings.
-    See
+    GNU/Linux GnuCash up to 4.4 installed as a Flatpak, is configured to access
+    the host dconf directly so BackupGnuCash doesn't need to do anything extra
+    to backup the GnuCash dconf settings.
+    See https://docs.flatpak.org/en/latest/sandbox-permissions.html#
+
+    GNU/Linux GnuCash 4.5 and later installed as a Flatpak, uses Gnome 3.38 in
+    which the dconf sandbox settings are isolated from the host dconf settings.
+    The dconf settings are stored in
     ```
-      https://docs.flatpak.org/en/latest/sandbox-permissions.html#
+      /home/[USERNAME]/.var/app/org.gnucash.GnuCash/config/glib-2.0/settings/keyfile
     ```
+    which is a .ini style text file. The keyfile is backed up by BackupGnuCash
+    when all of the following directory is backed up
+    ```
+      /home/[USERNAME]/.var/app/org.gnucash.GnuCash/config
+    ```
+
+    To restore the dconf settings, it is only necessary to extract the
+    keyfile from the backup archive back to its original location - it is not
+    necessary to use the dconf tool to reload the settings.
+
+    See https://bugs.gnucash.org/show_bug.cgi?id=798194 for information about
+    how GnuCash uses keyfile.
 
   - The **AqBanking** settings folder, for example
     ```
@@ -215,7 +231,7 @@ Features include
   If **Configuration V3+** is ticked AND **Flatpak** is ticked:
   - The **main GnuCash configuration** folder
     ```
-      GNU/Linux       $HOME/.var/app/org.gnucash.GnuCash/data/gnucash
+      GNU/Linux       /home/[USERNAME]/.var/app/org.gnucash.GnuCash/data/gnucash
     ```
 
     This includes among others
@@ -245,6 +261,10 @@ Features include
        ```
          GNU/Linux   /home/[USERNAME]/.var/app/org.gnucash.GnuCash/config/gtk-3.0/settings.ini
          GNU/Linux   /home/[USERNAME]/.var/app/org.gnucash.GnuCash/config/gtk-3.0/gtk.css
+       ```
+    3. The dconf settings for Flatpak GnuCash 4.5 and later
+       ```
+          /home/[USERNAME]/.var/app/org.gnucash.GnuCash/config/glib-2.0/settings/keyfile
        ```
 
   - The file for local customisations to the environment
