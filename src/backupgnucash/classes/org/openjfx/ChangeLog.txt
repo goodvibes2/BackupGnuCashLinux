@@ -1,5 +1,9 @@
 BackupGnuCash
 
+V# 2.?.? dd mmm yyyy Chris Good
+
+    * Clear GC Data Modified DateTime if file not found.
+
 V# 2.1.0 23 Apr 2021 Chris Good
 
     * Add support for Flatpak on Linux.

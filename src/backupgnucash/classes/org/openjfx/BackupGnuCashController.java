@@ -1146,6 +1146,7 @@ boolean exportDconf() {
             }
         } else {
             taLog.appendText("Error: GnuCash data is not readable or does not exist\n");
+            lblGCModDate.setText("Modified :");
         }
 
         // Validate Dropbox directory
