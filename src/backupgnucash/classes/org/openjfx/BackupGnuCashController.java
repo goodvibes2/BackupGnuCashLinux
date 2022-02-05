@@ -1578,15 +1578,6 @@ boolean exportDconf() {
                         taLog.appendText("Info: Skip as does not exist: " +
                                 pathGcGtk.toString() + "\n");
                     }
-                    // [CE]:\Program Files (x86)\gnucash\etc\gnucash\environment.local if exists
-                    String strPath = "\\Program Files (x86)\\gnucash\\etc\\gnucash\\environment.local";
-                    Path pathGcEnv = Paths.get("C:" + strPath);
-                    if (! Files.isReadable(pathGcEnv)) {
-                        pathGcEnv = Paths.get("E:" + strPath);
-                    }
-                    if (Files.isReadable(pathGcEnv)) {
-                        cmd[i++] = pathGcGtk.toString();
-                    }
                 } else { // Linux
                     if (chbGcFlatpak.isSelected()) {
                         // $HOME/.var/app/org.gnucash.GnuCash/config/
@@ -1685,6 +1676,16 @@ boolean exportDconf() {
                 } else {
                     taLog.appendText("Info: Skip as does not exist: " +
                             pathGcAq.toString() + "\n");
+                }
+
+                // [CE]:\Program Files (x86)\gnucash\etc\gnucash\environment.local if exists
+                String strPath = "\\Program Files (x86)\\gnucash\\etc\\gnucash\\environment.local";
+                Path pathGcEnv = Paths.get("C:" + strPath);
+                if (! Files.isReadable(pathGcEnv)) {
+                    pathGcEnv = Paths.get("E:" + strPath);
+                }
+                if (Files.isReadable(pathGcEnv)) {
+                    cmd[i++] = pathGcEnv.toString();
                 }
             } else {    // Linux
                 // Exported (dump) dconf settings file

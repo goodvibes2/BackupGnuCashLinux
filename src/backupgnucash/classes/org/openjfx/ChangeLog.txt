@@ -1,8 +1,9 @@
 BackupGnuCash
 
-V# 2.?.? dd mmm yyyy Chris Good
+V# 2.1.1 05 Feb 2022 Chris Good
 
     * Clear GC Data Modified DateTime if file not found.
+    * Fix bug not backing up Windows environment.local.
 
 V# 2.1.0 23 Apr 2021 Chris Good
 
